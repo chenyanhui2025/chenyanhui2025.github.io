@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <title>任务管理系统</title>
+</head>
+<body>
+  <div id="app">
+    <div id="left-column">
+      <h2>待处理任务区</h2>
+      <div class="task-grid" id="left-tasks">
+        <script>
+          const tasks = [
+            "平台活动参与",
+            "行业活动报名",
+            "店内营销活动策划",
+            "标题优化",
+            "主图优化",
+            "商品卖点提炼",
+            "商品包装视觉策划",
+            "爆品副链打造",
+            "低动销新链打造",
+            "新品多活动链打造",
+            "新品上架会员打新链",
+            "节庆日氛围装修",
+            "数据收集与备份",
+            "数据分析",
+            "数据播报",
+            "向需求部门提供数据服务",
+            "开发系统",
+            "ROI目标拆解与计划",
+            "品类人群包搭建",
+            "新品测款推广策略",
+            "畅品加速推广策略",
+            "爆品维量推广策略",
+            "滞品清仓推广策略",
+            "根据投产策略调整",
+			"根据投产人群包调整",
+            "推广预算周期决算复盘",
+            "各渠道推广方式占比策略",
+            "新-未使用推广工具开启运行",
+            "首页/活动页制作",
+            "低转化产品包装升级",
+            "畅销品包装优化",
+            "产品视觉风格包装与落地",
+            "产品多角度图拍摄",
+            "模特图视觉拍摄/升级",
+            "外协拍摄方案落地对接",
+            "拍摄样品全生命周期管理",
+            "尖货种草（站外）",
+            "IP款种草（站外）",
+            "精包装文案输出",
+            "活动页/专辑页框架输出",
+            "平台大促活动策划",
+            "尖货发售计划及销售追踪",
+            "自媒体维护",
+            "达人营销策略",
+            "主推款图文/视频内容制作",
+            "新品开箱视频",
+            "口播素材",
+            "会员活动策划",
+            "人群分层运营",
+            "人群结构分析",
+            "私域社群运营",
+            "商品采买计划",
+            "主推商品销售计划",
+            "新品上架节奏规划",
+            "下单（新品、翻单、快反）",
+            "商品控价/定价",
+            "活动测算/毛利折扣",
+            "商品库存风险管控",
+            "商品调拨",
+            "SAP/OMS系统账目管理",
+            "集团调拨账目处理",
+            "分销小品类订单提货全流程",
+            "订单交期确认",
+            "商品入库分仓",
+            "商品订单资料表维护",
+            "质检报告收集存档",
+            "内部样品借调管理",
+            "货品质检与返修",
+            "仓库发货系统配置与异常跟进",
+			"发货/退货入库及时率跟进",
+            "仓库盘点",
+            "零散/滞销库存出清",
+            "每月活动计划收集与单量预警",
+            "物流费用管理",
+            "售前咨询与转化支持",
+            "物流状态追踪与反馈",
+            "异常订单处理",
+            "退换货与投诉处理",
+            "差评分析与反馈改进",
+            "外协人员知识培训"
+          ];
+          for (let i = 0; i < tasks.length; i++) {
+            document.write(`<div class="task" draggable="true" data-color="lightgreen" id="task-${i + 1}">${tasks[i]}</div>`);
+          }
+        </script>
+      </div>
+    </div>
+    <div id="right-column">
+      <h2>任务分类区</h2>
+      <div class="category-grid">
+        <div class="category" data-category="assigned">
+          <h3>别人转交给我的任务</h3>
+          <div class="task-container" id="assigned-to-me"></div>
+        </div>
+        <div class="category" data-category="assigned-by">
+          <h3>我转交给别人的任务</h3>
+          <div class="task-container" id="assigned-by-me"></div>
+        </div>
+        <div class="category" data-category="peer">
+          <h3>平级之间的任务</h3>
+          <div class="task-container" id="peer-tasks"></div>
+        </div>
+        <div class="category" data-category="self">
+          <h3>自己给自己的任务</h3>
+          <div class="task-container" id="self-tasks"></div>
+        </div>
+        <div class="category" data-category="external">
+          <h3>交给外部的任务</h3>
+          <div class="task-container" id="external-tasks"></div>
+        </div>
+        <div class="category" data-category="feedback">
+          <h3>外部反馈回来的任务</h3>
+          <div class="task-container" id="external-feedback"></div>
+        </div>
+        <div class="category" data-category="irrelevant">
+          <h3>与我无关的任务</h3>
+          <div class="task-container" id="irrelevant-tasks"></div>
+        </div>
+        <div class="category" data-category="manual">
+          <h3>手动输入新增任务</h3>
+          <div class="task-container" id="manual-tasks">
+            <input type="text" id="new-task-input" placeholder="输入新任务">
+            <button id="add-task-btn">+ 添加任务</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
