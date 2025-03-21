@@ -1,107 +1,84 @@
-class TaskManager {
-  constructor() {
-    this.leftContainer = document.getElementById('left-tasks');
-    this.rightContainers = {
-      'assigned-to-me': document.getElementById('assigned-to-me'),
-      'assigned-by-me': document.getElementById('assigned-by-me'),
-      'peer-tasks': document.getElementById('peer-tasks'),
-      'self-tasks': document.getElementById('self-tasks'),
-      'external-tasks': document.getElementById('external-tasks'),
-      'external-feedback': document.getElementById('external-feedback'),
-      'irrelevant-tasks': document.getElementById('irrelevant-tasks'),
-      'manual-tasks': document.getElementById('manual-tasks')
-    };
-    this.init();
-  }
+// 初始化单元格
+document.querySelectorAll('.cell').forEach(cell => {
+  const addBtn = document.createElement('div');
+  addBtn.className = 'add-btn';
+  addBtn.textContent = '+';
+  addBtn.dataset.dep = cell.dataset.dep;
+  addBtn.dataset.target = cell.dataset.target;
+  cell.appendChild(addBtn);
+});
 
-  init() {
-    this.bindDragEvents();
-    this.bindAddTask();
+// 添加任务项
+document.addEventListener('click', function (e) {
+  if (e.target.classList.contains('add-btn')) {
+    const sourceDep = e.target.dataset.dep;
+    const targetDep = e.target.dataset.target;
+    const newTask = createTaskItem(sourceDep, targetDep);
+    e.target.parentNode.appendChild(newTask);
   }
+});
 
-  bindDragEvents() {
-    const allTasks = document.querySelectorAll('.task');
-    allTasks.forEach(task => {
-      task.addEventListener('dragstart', this.handleDragStart.bind(this));
-      task.addEventListener('dragend', this.handleDragEnd.bind(this));
+// 创建任务项函数
+function createTaskItem(sourceDep, targetDep) {
+  const taskDiv = document.createElement('div');
+  taskDiv.className = 'task-item';
+  
+  // 方向箭头
+  const arrow = document.createElement('div');
+  arrow.className = 'arrow';
+  const initialDirection = sourceDep === targetDep? 'none' : (sourceDep < targetDep? 'red' : 'blue');
+  arrow.classList.add(initialDirection);
+  
+  // 任务文本
+  const taskText = document.createElement('input');
+  taskText.className = 'task-text';
+  taskText.placeholder = '输入任务内容';
+  
+  // 状态圆圈
+  const statusSpan = document.createElement('span');
+  statusSpan.className = 'status';
+  statusSpan.innerHTML = `
+    <span class="circle gray" data-status="gray"></span>
+    <span class="circle gray" data-status="gray"></span>
+  `;
+  
+  // 删除按钮
+  const deleteBtn = document.createElement('span');
+  deleteBtn.className = 'delete-btn';
+  deleteBtn.textContent = '✖';
+  deleteBtn.addEventListener('click', function () {
+    taskDiv.remove();
+  });
+
+  taskDiv.appendChild(arrow);
+  taskDiv.appendChild(taskText);
+  taskDiv.appendChild(statusSpan);
+  taskDiv.appendChild(deleteBtn);
+  
+  // 绑定箭头点击事件
+  arrow.addEventListener('click', function () {
+    const currentClass = this.className.split(' ')[1];
+    const newClass = currentClass === 'red'? 'blue' : 'red';
+    this.className = 'arrow ' + newClass;
+  });
+
+  // 绑定编辑事件
+  taskText.addEventListener('dblclick', function () {
+    this.style.border = '1px solid #ccc';
+    this.focus();
+  });
+  taskText.addEventListener('blur', function () {
+    this.style.border = 'none';
+  });
+
+  // 绑定圆圈点击事件
+  statusSpan.querySelectorAll('.circle').forEach(circle => {
+    circle.addEventListener('click', function () {
+      const currentStatus = this.dataset.status;
+      this.style.backgroundColor = currentStatus === 'gray'? 'green' : '#ccc';
+      this.dataset.status = currentStatus === 'gray'? 'green' : 'gray';
     });
+  });
 
-    const allRightContainers = Object.values(this.rightContainers);
-    allRightContainers.forEach(container => {
-      container.addEventListener('dragover', this.handleDragOver.bind(this));
-      container.addEventListener('drop', this.handleDrop.bind(this));
-    });
-
-    this.leftContainer.addEventListener('dragover', this.handleDragOver.bind(this));
-    this.leftContainer.addEventListener('drop', this.handleDrop.bind(this));
-  }
-
-  handleDragStart(e) {
-    const taskData = {
-      id: e.target.id,
-      text: e.target.textContent,
-      color: e.target.dataset.color,
-      source: e.target.closest('.task-container')?.id || 'left'
-    };
-    e.dataTransfer.setData('text/json', JSON.stringify(taskData));
-    e.target.classList.add('dragging');
-  }
-
-  handleDragEnd(e) {
-    e.target.classList.remove('dragging');
-  }
-
-  handleDragOver(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    const targetContainer = e.target.closest('.task-container') || e.target.closest('#left-tasks');
-    targetContainer?.classList.add('dragover');
-  }
-
-  handleDrop(e) {
-    e.preventDefault();
-    const targetContainer = e.target.closest('.task-container') || e.target.closest('#left-tasks');
-    if (!targetContainer) return;
-
-    targetContainer.classList.remove('dragover');
-    const taskData = JSON.parse(e.dataTransfer.getData('text/json'));
-
-    if (targetContainer.id === taskData.source) return;
-
-    // 修改拖放后的任务颜色为浅红色
-    const newTask = this.createTaskElement(taskData.text, 'lightcoral', taskData.id);
-
-    const sourceContainer = document.getElementById(taskData.source === 'left' ? 'left-tasks' : taskData.source);
-    if (sourceContainer) {
-      const oldTask = sourceContainer.querySelector(`#${taskData.id}`);
-      oldTask?.remove();
-    }
-
-    targetContainer.appendChild(newTask);
-  }
-
-  createTaskElement(text, color, id) {
-    const task = document.createElement('div');
-    task.className = 'task';
-    task.draggable = true;
-    task.textContent = text;
-    task.dataset.color = color;
-    task.id = id;
-    task.addEventListener('dragstart', this.handleDragStart.bind(this));
-    task.addEventListener('dragend', this.handleDragEnd.bind(this));
-    return task;
-  }
-
-  bindAddTask() {
-    document.getElementById('add-task-btn').addEventListener('click', () => {
-      const input = document.getElementById('new-task-input');
-      const text = input.value.trim();
-      if (!text) return;
-      const newTask = this.createTaskElement(text, 'lightblue', `task-${Date.now()}`);
-      document.getElementById('manual-tasks').appendChild(newTask);
-      input.value = '';
-    });
-  }
+  return taskDiv;
 }
-
-new TaskManager();
