@@ -1,102 +1,38 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles.css">
-  <title>部门任务交互页面</title>
-</head>
-
-<body>
-  <table id="taskTable">
-    <thead>
-      <tr>
-        <th>部门</th>
-        <th>数据分析部</th>
-        <th>客户服务部</th>
-        <th>HRBP部</th>
-        <th>商品运营部</th>
-        <th>商品支持部</th>
-        <th>推广部</th>
-        <th>营销策划部</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- 生成所有部门行 -->
-      <tr>
-        <td>数据分析部</td>
-        <td class="cell" data-dep="数据分析部" data-target="数据分析部"></td>
-        <td class="cell" data-dep="数据分析部" data-target="客户服务部"></td>
-        <td class="cell" data-dep="数据分析部" data-target="HRBP部"></td>
-        <td class="cell" data-dep="数据分析部" data-target="商品运营部"></td>
-        <td class="cell" data-dep="数据分析部" data-target="商品支持部"></td>
-        <td class="cell" data-dep="数据分析部" data-target="推广部"></td>
-        <td class="cell" data-dep="数据分析部" data-target="营销策划部"></td>
-      </tr>
-      <tr>
-        <td>客户服务部</td>
-        <td class="cell" data-dep="客户服务部" data-target="数据分析部"></td>
-        <td class="cell" data-dep="客户服务部" data-target="客户服务部"></td>
-        <td class="cell" data-dep="客户服务部" data-target="HRBP部"></td>
-        <td class="cell" data-dep="客户服务部" data-target="商品运营部"></td>
-        <td class="cell" data-dep="客户服务部" data-target="商品支持部"></td>
-        <td class="cell" data-dep="客户服务部" data-target="推广部"></td>
-        <td class="cell" data-dep="客户服务部" data-target="营销策划部"></td>
-      </tr>
-      <tr>
-        <td>HRBP部</td>
-        <td class="cell" data-dep="HRBP部" data-target="数据分析部"></td>
-        <td class="cell" data-dep="HRBP部" data-target="客户服务部"></td>
-        <td class="cell" data-dep="HRBP部" data-target="HRBP部"></td>
-        <td class="cell" data-dep="HRBP部" data-target="商品运营部"></td>
-        <td class="cell" data-dep="HRBP部" data-target="商品支持部"></td>
-        <td class="cell" data-dep="HRBP部" data-target="推广部"></td>
-        <td class="cell" data-dep="HRBP部" data-target="营销策划部"></td>
-      </tr>
-      <tr>
-        <td>商品运营部</td>
-        <td class="cell" data-dep="商品运营部" data-target="数据分析部"></td>
-        <td class="cell" data-dep="商品运营部" data-target="客户服务部"></td>
-        <td class="cell" data-dep="商品运营部" data-target="HRBP部"></td>
-        <td class="cell" data-dep="商品运营部" data-target="商品运营部"></td>
-        <td class="cell" data-dep="商品运营部" data-target="商品支持部"></td>
-        <td class="cell" data-dep="商品运营部" data-target="推广部"></td>
-        <td class="cell" data-dep="商品运营部" data-target="营销策划部"></td>
-      </tr>
-      <tr>
-        <td>商品支持部</td>
-        <td class="cell" data-dep="商品支持部" data-target="数据分析部"></td>
-        <td class="cell" data-dep="商品支持部" data-target="客户服务部"></td>
-        <td class="cell" data-dep="商品支持部" data-target="HRBP部"></td>
-        <td class="cell" data-dep="商品支持部" data-target="商品运营部"></td>
-        <td class="cell" data-dep="商品支持部" data-target="商品支持部"></td>
-        <td class="cell" data-dep="商品支持部" data-target="推广部"></td>
-        <td class="cell" data-dep="商品支持部" data-target="营销策划部"></td>
-      </tr>
-      <tr>
-        <td>推广部</td>
-        <td class="cell" data-dep="推广部" data-target="数据分析部"></td>
-        <td class="cell" data-dep="推广部" data-target="客户服务部"></td>
-        <td class="cell" data-dep="推广部" data-target="HRBP部"></td>
-        <td class="cell" data-dep="推广部" data-target="商品运营部"></td>
-        <td class="cell" data-dep="推广部" data-target="商品支持部"></td>
-        <td class="cell" data-dep="推广部" data-target="推广部"></td>
-        <td class="cell" data-dep="推广部" data-target="营销策划部"></td>
-      </tr>
-      <tr>
-        <td>营销策划部</td>
-        <td class="cell" data-dep="营销策划部" data-target="数据分析部"></td>
-        <td class="cell" data-dep="营销策划部" data-target="客户服务部"></td>
-        <td class="cell" data-dep="营销策划部" data-target="HRBP部"></td>
-        <td class="cell" data-dep="营销策划部" data-target="商品运营部"></td>
-        <td class="cell" data-dep="营销策划部" data-target="商品支持部"></td>
-        <td class="cell" data-dep="营销策划部" data-target="推广部"></td>
-        <td class="cell" data-dep="营销策划部" data-target="营销策划部"></td>
-      </tr>
-    </tbody>
-  </table>
-  <script src="script.js"></script>
-</body>
-
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>电商发货数据</title>
+	</head>
+	<body>
+		<h1><strong>电商昨日发货数据:</strong></h1>
+		<hr >
+		<a href="E:\临时存放-----\图片\其他删除\大盘数据1.png">
+			<h2><strong>发货日报表（图片）</strong></h2>
+		</a>
+		<a href="E:\临时存放-----\图片\其他删除\月度数据1.png">
+			<h2><strong>目标达成表（图片）</strong></h2>
+		</a>
+		<a href="E:\临时存放-----\图片\其他删除\部门销售表.png">
+			<h2><strong>部门销售表（图片）</strong></h2>
+		</a>
+		<hr >
+		<p>注：首先需拥有共享权限！！！</p>
+		<p>
+			<a href="\\10.5.50.101\厦门文档\电子商务中心\数据分析组\2.数据分析部报表\【日报】01-发货数据">
+				<strong>店铺日报数据共享地址：</strong>\\10.5.50.101\厦门文档\电子商务中心\数据分析组\2.数据分析部报表\【日报】01-发货数据
+			</a>
+		</p>
+		<p>
+			<a href="\\10.5.50.101\厦门文档\电子商务中心\数据分析组\2.数据分析部报表\数据备份\5-发货目标跟进表\2025年">
+			<strong>月目标达成数据共享地址：</strong>\\10.5.50.101\厦门文档\电子商务中心\数据分析组\2.数据分析部报表\数据备份\5-发货目标跟进表\2025年
+			</a>	
+		</p>
+		<p>
+			<a href="\\10.5.50.101\厦门文档\电子商务中心\数据分析组\2.数据分析部报表\OMS销售明细表\2025年\月">
+				<strong>款号详细发货数据共享地址：</strong>\\10.5.50.101\厦门文档\电子商务中心\数据分析组\2.数据分析部报表\OMS销售明细表\2025年\月
+			</a>
+		</p>
+	</body>
 </html>
