@@ -70,6 +70,16 @@
             .number-transition {
                 transition: all 1s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
+            /* 表格样式增强 */
+            .table-shadow {
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .table-striped tbody tr:nth-child(even) {
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+            .table-hover tbody tr:hover {
+                background-color: rgba(22, 93, 255, 0.1);
+            }
         }
     </style>
 </head>
@@ -159,13 +169,13 @@
             
             <!-- 标题 -->
             <div class="mb-8">
-                <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent mb-2 text-shadow">渠道销售详情</h2>
-                <p class="text-gray-light">各销售渠道业绩数据一览</p>
+                <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent mb-2 text-shadow">渠道销售趋势</h2>
+                <p class="text-gray-light">5月9日-5月15日销售趋势分析</p>
             </div>
             
             <!-- 图表区域 -->
             <div class="glass-effect rounded-2xl p-6 border border-primary/30 mb-8">
-                <h3 class="text-xl font-semibold mb-4">销售渠道对比</h3>
+                <h3 class="text-xl font-semibold mb-4">销售额与目标趋势</h3>
                 <div class="h-80">
                     <canvas id="channels-chart"></canvas>
                 </div>
@@ -174,7 +184,7 @@
             <!-- 渠道数据表格 -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <!-- 渠道1 -->
-                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
+                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 channel-card" data-channel="旗舰店运营部">
                     <div class="flex justify-between items-center mb-4">
                         <h4 class="font-semibold text-lg">旗舰店运营部</h4>
                         <span class="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs">线上</span>
@@ -182,7 +192,7 @@
                     <div class="space-y-4">
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>销售额</span>
+                                <span>销售份额</span>
                                 <span class="text-white">¥0</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
@@ -191,27 +201,27 @@
                         </div>
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>目标</span>
-                                <span class="text-white">￥1.2亿</span>
+                                <span>累计目标</span>
+                                <span class="text-white">￥0</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-accent rounded-full" style="width: 100%"></div>
+                                <div class="h-full bg-accent rounded-full" style="width: 0%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>达成率</span>
-                                <span class="text-secondary">0%</span>
+                                <span>总计目标</span>
+                                <span class="text-secondary">￥1.2亿</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 0%"></div>
+                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 100%"></div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- 渠道2 -->
-                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
+                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 channel-card" data-channel="淘系运营部">
                     <div class="flex justify-between items-center mb-4">
                         <h4 class="font-semibold text-lg">淘系运营部</h4>
                         <span class="px-3 py-1 rounded-full bg-accent/20 text-accent text-xs">线上</span>
@@ -219,7 +229,7 @@
                     <div class="space-y-4">
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>销售额</span>
+                                <span>销售份额</span>
                                 <span class="text-white">¥0</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
@@ -228,27 +238,27 @@
                         </div>
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>目标</span>
-                                <span class="text-white">￥440万</span>
+                                <span>累计目标</span>
+                                <span class="text-white">￥0</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-accent rounded-full" style="width: 100%"></div>
+                                <div class="h-full bg-accent rounded-full" style="width: 0%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>达成率</span>
-                                <span class="text-secondary">0%</span>
+                                <span>总计目标</span>
+                                <span class="text-secondary">￥440万</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 0%"></div>
+                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 100%"></div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- 渠道3 -->
-                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
+                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 channel-card" data-channel="京东运营部">
                     <div class="flex justify-between items-center mb-4">
                         <h4 class="font-semibold text-lg">京东运营部</h4>
                         <span class="px-3 py-1 rounded-full bg-accent/20 text-accent text-xs">线上</span>
@@ -256,36 +266,36 @@
                     <div class="space-y-4">
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>销售额</span>
-                                <span class="text-white">￥1543.6万</span>
+                                <span>销售份额</span>
+                                <span class="text-white">￥1629.1万</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-primary rounded-full" style="width: 16.8%"></div>
+                                <div class="h-full bg-primary rounded-full" style="width: 17.7%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>目标</span>
-                                <span class="text-white">¥9200万</span>
+                                <span>累计目标</span>
+                                <span class="text-white">¥1665.9万</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-accent rounded-full" style="width: 100%"></div>
+                                <div class="h-full bg-accent rounded-full" style="width: 18%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>达成率</span>
-                                <span class="text-secondary">16.8%</span>
+                                <span>总计目标</span>
+                                <span class="text-secondary">¥9200万</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 16.8%"></div>
+                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 100%"></div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- 渠道4 -->
-                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
+                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 channel-card" data-channel="渠道运营部">
                     <div class="flex justify-between items-center mb-4">
                         <h4 class="font-semibold text-lg">渠道运营部</h4>
                         <span class="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs">线上</span>
@@ -293,36 +303,36 @@
                     <div class="space-y-4">
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>销售额</span>
-                                <span class="text-white">￥749.2万</span>
+                                <span>销售份额</span>
+                                <span class="text-white">￥922.4万</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-primary rounded-full" style="width: 13.3%"></div>
+                                <div class="h-full bg-primary rounded-full" style="width: 15%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>目标</span>
-                                <span class="text-white">￥5649.8万</span>
+                                <span>累计目标</span>
+                                <span class="text-white">￥580.3万</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-accent rounded-full" style="width: 100%"></div>
+                                <div class="h-full bg-accent rounded-full" style="width: 9%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>达成率</span>
-                                <span class="text-secondary">13.3%</span>
+                                <span>总计目标</span>
+                                <span class="text-secondary">￥6149.8万</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 13.3%"></div>
+                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 100%"></div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- 渠道5 -->
-                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
+                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 channel-card" data-channel="得物运营部">
                     <div class="flex justify-between items-center mb-4">
                         <h4 class="font-semibold text-lg">得物运营部</h4>
                         <span class="px-3 py-1 rounded-full bg-accent/20 text-accent text-xs">线上</span>
@@ -330,36 +340,36 @@
                     <div class="space-y-4">
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>销售额</span>
-                                <span class="text-white">￥89.3万</span>
+                                <span>销售份额</span>
+                                <span class="text-white">￥0</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-primary rounded-full" style="width: 3.4%"></div>
+                                <div class="h-full bg-primary rounded-full" style="width: 0%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>目标</span>
-                                <span class="text-white">￥2650.2万</span>
+                                <span>累计目标</span>
+                                <span class="text-white">￥0</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-accent rounded-full" style="width: 100%"></div>
+                                <div class="h-full bg-accent rounded-full" style="width: 0%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>达成率</span>
-                                <span class="text-secondary">3.4%</span>
+                                <span>总计目标</span>
+                                <span class="text-secondary">￥2150.2万</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 3.4%"></div>
+                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 100%"></div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- 渠道6 -->
-                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
+                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 channel-card" data-channel="儿童管理中心">
                     <div class="flex justify-between items-center mb-4">
                         <h4 class="font-semibold text-lg">儿童管理中心</h4>
                         <span class="px-3 py-1 rounded-full bg-accent/20 text-accent text-xs">线上</span>
@@ -367,36 +377,36 @@
                     <div class="space-y-4">
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>销售额</span>
-                                <span class="text-white">￥208.1万</span>
+                                <span>销售份额</span>
+                                <span class="text-white">￥285.6万</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-primary rounded-full" style="width: 5.6%"></div>
+                                <div class="h-full bg-primary rounded-full" style="width: 7.7%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>目标</span>
-                                <span class="text-white">￥3700万</span>
+                                <span>累计目标</span>
+                                <span class="text-white">￥212.9万</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-accent rounded-full" style="width: 100%"></div>
+                                <div class="h-full bg-accent rounded-full" style="width: 6%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>达成率</span>
-                                <span class="text-secondary">5.6%</span>
+                                <span>总计目标</span>
+                                <span class="text-secondary">￥3700万</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 5.6%"></div>
+                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 100%"></div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- 渠道7 -->
-                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
+                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 channel-card" data-channel="直播运营一部">
                     <div class="flex justify-between items-center mb-4">
                         <h4 class="font-semibold text-lg">直播运营一部</h4>
                         <span class="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs">线上</span>
@@ -404,36 +414,36 @@
                     <div class="space-y-4">
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>销售额</span>
-                                <span class="text-white">￥964.3万</span>
+                                <span>销售份额</span>
+                                <span class="text-white">￥1386.5万</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-primary rounded-full" style="width: 5.3%"></div>
+                                <div class="h-full bg-primary rounded-full" style="width: 7.6%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>目标</span>
-                                <span class="text-white">￥1.83亿</span>
+                                <span>累计目标</span>
+                                <span class="text-white">￥1710万</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-accent rounded-full" style="width: 100%"></div>
+                                <div class="h-full bg-accent rounded-full" style="width: 9%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>达成率</span>
-                                <span class="text-secondary">5.3%</span>
+                                <span>总计目标</span>
+                                <span class="text-secondary">￥1.83亿</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 5.3%"></div>
+                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 100%"></div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- 渠道8 -->
-                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
+                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 channel-card" data-channel="分销部">
                     <div class="flex justify-between items-center mb-4">
                         <h4 class="font-semibold text-lg">分销部</h4>
                         <span class="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs">线上</span>
@@ -441,29 +451,29 @@
                     <div class="space-y-4">
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>销售额</span>
-                                <span class="text-white">￥125.9万</span>
+                                <span>销售份额</span>
+                                <span class="text-white">￥172万</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-primary rounded-full" style="width: 3.6%"></div>
+                                <div class="h-full bg-primary rounded-full" style="width: 4.9%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>目标</span>
-                                <span class="text-white">￥3500万</span>
+                                <span>累计目标</span>
+                                <span class="text-white">￥211.4万</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-accent rounded-full" style="width: 100%"></div>
+                                <div class="h-full bg-accent rounded-full" style="width: 6%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>达成率</span>
-                                <span class="text-secondary">3.6%</span>
+                                <span>总计目标</span>
+                                <span class="text-secondary">￥4000万</span>
                             </div>
                             <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 3.6%"></div>
+                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 100%"></div>
                             </div>
                         </div>
                     </div>
@@ -478,18 +488,75 @@
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="text-center">
-                        <p class="text-gray-light mb-1">总销售额</p>
-                        <p class="text-2xl font-bold text-white">￥3680.4万</p>
+                        <p class="text-gray-light mb-1">总销售份额</p>
+                        <p class="text-2xl font-bold text-white">￥4395.6万</p>
                     </div>
                     <div class="text-center">
-                        <p class="text-gray-light mb-1">总目标</p>
+                        <p class="text-gray-light mb-1">总累计目标</p>
                         <p class="text-2xl font-bold text-white">¥55440万</p>
                     </div>
                     <div class="text-center">
                         <p class="text-gray-light mb-1">总体达成率</p>
-                        <p class="text-2xl font-bold text-secondary">6.6%</p>
+                        <p class="text-2xl font-bold text-secondary">7.9%</p>
                     </div>
                 </div>
+            </div>
+        </div>
+        
+        <!-- 第三屏：渠道店铺详情 -->
+        <div id="screen-3" class="min-h-screen flex flex-col px-4 py-8 relative z-10 transition-all duration-1000 translate-y-full opacity-0">
+            <!-- 返回按钮 -->
+            <button id="screen3-back-btn" class="glass-effect px-4 py-2 rounded-full flex items-center mb-6 hover:bg-accent/20 transition-all duration-300 transform hover:scale-105">
+                <i class="fa-solid fa-arrow-left mr-2 text-accent"></i>
+                <span>返回渠道列表</span>
+            </button>
+            
+            <!-- 标题区域 -->
+            <div class="mb-8 text-center">
+                <h2 id="screen3-title" class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-transparent bg-clip-text bg-gradient-to-r from-secondary to-accent mb-2 text-shadow">
+                    渠道店铺详情
+                </h2>
+                <p class="text-gray-light">各店铺销售目标与达成情况</p>
+            </div>
+            
+            <!-- 店铺数据表格 -->
+            <div class="glass-effect rounded-2xl p-6 border border-secondary/30 overflow-x-auto table-shadow">
+                <table class="w-full min-w-max text-left text-sm text-gray-light table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="px-6 py-3 border-b-2 border-dark-light font-semibold text-white">
+                                店铺名称
+                            </th>
+                            <th scope="col" class="px-6 py-3 border-b-2 border-dark-light font-semibold text-white">
+                                总目标(万元)
+                            </th>
+                            <th scope="col" class="px-6 py-3 border-b-2 border-dark-light font-semibold text-white">
+                                累计目标(万元)
+                            </th>
+                            <th scope="col" class="px-6 py-3 border-b-2 border-dark-light font-semibold text-white">
+                                累计销售(万元)
+                            </th>
+                            <th scope="col" class="px-6 py-3 border-b-2 border-dark-light font-semibold text-white">
+                                总目标达成率
+                            </th>
+                            <th scope="col" class="px-6 py-3 border-b-2 border-dark-light font-semibold text-white">
+                                累计达成率
+                            </th>
+                            <th scope="col" class="px-6 py-3 border-b-2 border-dark-light font-semibold text-white">
+                                当日目标(万元)
+                            </th>
+                            <th scope="col" class="px-6 py-3 border-b-2 border-dark-light font-semibold text-white">
+                                当日销售(万元)
+                            </th>
+                            <th scope="col" class="px-6 py-3 border-b-2 border-dark-light font-semibold text-white">
+                                当日达成率
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="screen3-table-body">
+                        <!-- 动态生成的店铺数据行 -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -618,91 +685,215 @@
             });
         }
         
-        // 初始化渠道对比图表
+        // 初始化渠道对比图表（修改为折线图）
         function initChannelsChart() {
             const ctx = document.getElementById('channels-chart').getContext('2d');
             
-            // 销毁已存在的图表
             if (window.channelsChart) {
                 window.channelsChart.destroy();
             }
+
+            // 模拟日期数据（5月9日-5月15日）
+            const dates = ['05/09', '05/10', '05/11', '05/12', '05/13', '05/14', '05/15'];
             
-            // 创建新图表
             window.channelsChart = new Chart(ctx, {
-                type: 'bar',
+                type: 'line', // 修改为折线图
                 data: {
-                    labels: ['旗舰店运营部', '淘系运营部', '京东运营部', '渠道运营部', '得物运营部', '儿童管理中心', '直播运营一部', '分销部'],
+                    labels: dates,
                     datasets: [
                         {
-                            label: '销售额',
-                            data: [0, 0, 15435589, 7492011, 892939, 2081134, 9643034, 1258830],
-                            backgroundColor: 'rgba(22, 93, 255, 0.7)',
-                            borderColor: 'rgba(22, 93, 255, 1)',
-                            borderWidth: 1
+                            label: '总计销售额',
+                            data: [372.2882, 439.1001, 358.7689, 330.7627, 892.9002, 1061.8568, 939.9315], // 单位：万元
+                            borderColor: '#165DFF',
+                            backgroundColor: 'rgba(22, 93, 255, 0.2)',
+                            borderWidth: 2,
+                            tension: 0.4, // 添加曲线张力
+                            pointRadius: 6,
+                            pointHoverRadius: 8
                         },
                         {
-                            label: '目标',
-                            data: [120000000, 4400000, 92000000, 56498000, 26502000, 37000000, 183000000, 35000000],
-                            backgroundColor: 'rgba(114, 46, 209, 0.7)',
-                            borderColor: 'rgba(114, 46, 209, 1)',
-                            borderWidth: 1
+                            label: '总计目标',
+                            data: [307.4460, 331.4375, 267.5081, 301.6938, 964.0124, 1285.2499, 923.2562], // 固定目标值
+                            borderColor: '#722ED1',
+                            backgroundColor: 'rgba(114, 46, 209, 0.2)',
+                            borderWidth: 2,
+                            tension: 0.2,
+                            pointRadius: 4,
+                            pointStyle: 'cross'
                         }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return '¥' + (value / 10000) + '万';
-                                }
-                            }
-                        }
-                    },
                     plugins: {
                         legend: {
                             position: 'top',
+                            labels: {
+                                color: '#C9CDD4'
+                            }
                         },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    if (context.parsed.y !== null) {
-                                        label += '¥' + context.parsed.y.toLocaleString();
-                                    }
-                                    return label;
+                                    return `${context.dataset.label}: ¥${context.parsed.y.toLocaleString()}万`;
                                 }
                             }
                         }
                     },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#C9CDD4',
+                                font: { weight: 500 }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255,255,255,0.05)',
+                                borderDash: [5, 5]
+                            },
+                            ticks: {
+                                color: '#C9CDD4',
+                                font: { weight: 400 },
+                                callback: (value) => `¥${value}万`
+                            }
+                        }
+                    },
                     animation: {
-                        duration: 2000,
-                        easing: 'easeOutQuart'
+                        duration: 1500,
+                        easing: 'easeOutQuad'
                     }
                 }
             });
+        }
+        
+        // 模拟各渠道的店铺数据（可替换为真实数据接口）
+        const channelStoresData = {
+            '旗舰店运营部': [
+                { store: '官方旗舰店', total: 8000, accumulativeTarget: 6000, accumulativeSales: 5500, totalRate: 68.75, accumulativeRate: 91.67, dailyTarget: 300, dailySales: 280, dailyRate: 93.33 },
+                { store: '品牌旗舰店', total: 4000, accumulativeTarget: 3000, accumulativeSales: 2800, totalRate: 70, accumulativeRate: 93.33, dailyTarget: 150, dailySales: 140, dailyRate: 93.33 }
+            ],
+            '淘系运营部': [
+                { store: '天猫旗舰店', total: 440, accumulativeTarget: 440, accumulativeSales: 300, totalRate: 68.18, accumulativeRate: 68.18, dailyTarget: 20, dailySales: 18, dailyRate: 90 }
+            ],
+            '京东运营部': [
+                { store: '京东自营店', total: 5000, accumulativeTarget: 3000, accumulativeSales: 2500, totalRate: 50, accumulativeRate: 83.33, dailyTarget: 200, dailySales: 180, dailyRate: 90 },
+                { store: '京东旗舰店', total: 4200, accumulativeTarget: 2800, accumulativeSales: 2300, totalRate: 54.76, accumulativeRate: 82.14, dailyTarget: 180, dailySales: 160, dailyRate: 88.89 }
+            ],
+            '渠道运营部': [
+                { store: '拼多多旗舰店', total: 3000, accumulativeTarget: 2000, accumulativeSales: 1800, totalRate: 60, accumulativeRate: 90, dailyTarget: 100, dailySales: 95, dailyRate: 95 },
+                { store: '唯品会旗舰店', total: 2649.8, accumulativeTarget: 1766.5, accumulativeSales: 1500, totalRate: 56.6, accumulativeRate: 84.9, dailyTarget: 85, dailySales: 75, dailyRate: 88.24 }
+            ],
+            '得物运营部': [
+                { store: '得物旗舰店', total: 2650.2, accumulativeTarget: 1766.8, accumulativeSales: 89.3, totalRate: 3.37, accumulativeRate: 5.05, dailyTarget: 15, dailySales: 12, dailyRate: 80 }
+            ],
+            '儿童管理中心': [
+                { store: '儿童旗舰店', total: 2000, accumulativeTarget: 1320, accumulativeSales: 150, totalRate: 7.5, accumulativeRate: 11.36, dailyTarget: 10, dailySales: 8, dailyRate: 80 },
+                { store: '童装专卖店', total: 1700, accumulativeTarget: 1122, accumulativeSales: 58.1, totalRate: 3.42, accumulativeRate: 5.18, dailyTarget: 8, dailySales: 6, dailyRate: 75 }
+            ],
+            '直播运营一部': [
+                { store: '抖音直播间', total: 12000, accumulativeTarget: 7920, accumulativeSales: 6000, totalRate: 50, accumulativeRate: 75.76, dailyTarget: 500, dailySales: 450, dailyRate: 90 },
+                { store: '快手直播间', total: 6300, accumulativeTarget: 4158, accumulativeSales: 3643, totalRate: 57.83, accumulativeRate: 87.62, dailyTarget: 260, dailySales: 230, dailyRate: 88.46 },
+                { store: '淘宝直播间', total: 6300, accumulativeTarget: 4158, accumulativeSales: 600, totalRate: 9.52, accumulativeRate: 14.43, dailyTarget: 240, dailySales: 180, dailyRate: 75 }
+            ],
+            '分销部': [
+                { store: '经销商A', total: 1500, accumulativeTarget: 990, accumulativeSales: 550, totalRate: 36.67, accumulativeRate: 55.56, dailyTarget: 50, dailySales: 45, dailyRate: 90 },
+                { store: '经销商B', total: 1000, accumulativeTarget: 660, accumulativeSales: 450, totalRate: 45, accumulativeRate: 68.18, dailyTarget: 35, dailySales: 30, dailyRate: 85.71 },
+                { store: '经销商C', total: 1000, accumulativeTarget: 660, accumulativeSales: 258.8, totalRate: 25.88, accumulativeRate: 39.21, dailyTarget: 30, dailySales: 25, dailyRate: 83.33 }
+            ]
+        };
+        
+        // 初始化第三屏跳转事件
+        function setupScreen3Transitions() {
+            const channelCards = document.querySelectorAll('.channel-card');
+            
+            channelCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const channelName = this.getAttribute('data-channel');
+                    showScreen3(channelName);
+                });
+            });
+        }
+        
+        // 显示第三屏并加载对应数据
+        function showScreen3(channelName) {
+            const screen3 = document.getElementById('screen-3');
+            const screen3Title = document.getElementById('screen3-title');
+            const tableBody = document.getElementById('screen3-table-body');
+            
+            // 更新标题
+            screen3Title.textContent = `${channelName} - 店铺详情`;
+            
+            // 获取对应渠道的店铺数据
+            const stores = channelStoresData[channelName] || [];
+            
+            // 清空表格
+            tableBody.innerHTML = '';
+            
+            // 填充表格数据
+            stores.forEach(store => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-primary/10 transition-all duration-300';
+                
+                // 计算达成率样式
+                const totalRateClass = getRateClass(store.totalRate);
+                const accumulativeRateClass = getRateClass(store.accumulativeRate);
+                const dailyRateClass = getRateClass(store.dailyRate);
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 border-b border-dark-light">${store.store}</td>
+                    <td class="px-6 py-4 border-b border-dark-light">${store.total}</td>
+                    <td class="px-6 py-4 border-b border-dark-light">${store.accumulativeTarget}</td>
+                    <td class="px-6 py-4 border-b border-dark-light">${store.accumulativeSales}</td>
+                    <td class="px-6 py-4 border-b border-dark-light ${totalRateClass}">${store.totalRate}%</td>
+                    <td class="px-6 py-4 border-b border-dark-light ${accumulativeRateClass}">${store.accumulativeRate}%</td>
+                    <td class="px-6 py-4 border-b border-dark-light">${store.dailyTarget}</td>
+                    <td class="px-6 py-4 border-b border-dark-light">${store.dailySales}</td>
+                    <td class="px-6 py-4 border-b border-dark-light ${dailyRateClass}">${store.dailyRate}%</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // 显示第三屏
+            screen3.classList.remove('translate-y-full', 'opacity-0');
+            screen3.classList.add('translate-y-0', 'opacity-1');
+            
+            // 返回按钮事件
+            document.getElementById('screen3-back-btn').addEventListener('click', function() {
+                screen3.classList.add('translate-y-full', 'opacity-0');
+                screen3.classList.remove('translate-y-0', 'opacity-1');
+            });
+        }
+        
+        // 根据达成率返回样式类
+        function getRateClass(rate) {
+            if (rate >= 90) return 'text-secondary';
+            if (rate >= 70) return 'text-green-400';
+            if (rate >= 50) return 'text-yellow-400';
+            return 'text-red-400';
         }
         
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
             createParticles();
             setupScreenTransitions();
+            setupScreen3Transitions();
             
             // 初始动画
             setTimeout(() => {
-                animateNumber('total-sales', 0, 36803537, 2000);
+                animateNumber('total-sales', 0, 43956084, 2000);
                 animateNumber('total-target', 0, 554400000, 2000);
-                animatePercentage('total-rate', 0, 6.6, 2000);
-                animateProgressBar('progress-bar', 0, 6.6, 2000);
+                animatePercentage('total-rate', 0, 7.9, 2000);
+                animateProgressBar('progress-bar', 0, 7.9, 2000);
             }, 500);
         });
     </script>
 </body>
-</html>
-    
+</html>    
