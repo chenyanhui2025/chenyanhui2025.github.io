@@ -3,897 +3,399 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>尔克618销售数据可视化平台</title>
+    <title>销售数据分析</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind配置 -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        primary: '#165DFF',
-                        secondary: '#00B42A',
-                        accent: '#722ED1',
-                        dark: '#1D2129',
-                        'dark-light': '#2B2F36',
-                        'gray-light': '#C9CDD4',
-                        'primary-light': '#E8F3FF'
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        accent: '#8B5CF6',
+                        neutral: '#1F2937',
                     },
                     fontFamily: {
-                        inter: ['Inter', 'sans-serif'],
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
                     },
-                    animation: {
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'float': 'float 3s ease-in-out infinite',
-                        'glow': 'glow 2s ease-in-out infinite alternate'
-                    },
-                    keyframes: {
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-10px)' },
-                        },
-                        glow: {
-                            '0%': { boxShadow: '0 0 5px rgba(22, 93, 255, 0.5)' },
-                            '100%': { boxShadow: '0 0 20px rgba(22, 93, 255, 0.8)' },
-                        }
-                    }
-                },
+                }
             }
         }
     </script>
-    
     <style type="text/tailwindcss">
         @layer utilities {
             .content-auto {
                 content-visibility: auto;
             }
-            .text-shadow {
-                text-shadow: 0 0 8px rgba(22, 93, 255, 0.5);
-            }
-            .bg-grid {
-                background-size: 40px 40px;
-                background-image: 
-                    linear-gradient(to right, rgba(22, 93, 255, 0.05) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(22, 93, 255, 0.05) 1px, transparent 1px);
-            }
-            .glass-effect {
-                backdrop-filter: blur(10px);
-                background-color: rgba(29, 33, 41, 0.7);
-            }
-            .scrollbar-hide::-webkit-scrollbar {
-                display: none;
-            }
-            .number-transition {
-                transition: all 1s cubic-bezier(0.34, 1.56, 0.64, 1);
-            }
-            /* 表格样式增强 */
             .table-shadow {
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             }
-            .table-striped tbody tr:nth-child(even) {
-                background-color: rgba(255, 255, 255, 0.05);
+            .animate-fade-in {
+                animation: fadeIn 0.3s ease-in-out;
             }
-            .table-hover tbody tr:hover {
-                background-color: rgba(22, 93, 255, 0.1);
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
             }
         }
     </style>
 </head>
-<body class="font-inter bg-dark text-white min-h-screen overflow-x-hidden">
-    <!-- 主容器 -->
-    <div id="app-container" class="min-h-screen relative bg-grid">
-        <!-- 粒子背景 -->
-        <div id="particles" class="fixed inset-0 z-0"></div>
+<body class="bg-gray-50 min-h-screen font-sans">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- 页面标题 -->
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-neutral mb-2">销售数据分析平台</h1>
+            <p class="text-gray-500 max-w-2xl mx-auto">通过款号筛选查看销售数据，未筛选时显示销售额前10的商品</p>
+        </header>
         
-        <!-- 第一屏：总体数据 -->
-        <div id="screen-1" class="min-h-screen flex flex-col items-center justify-center px-4 py-8 relative z-10 transition-all duration-1000">
-            <div class="text-center mb-12">
-                <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent mb-2 text-shadow animate-pulse-slow">尔克618发货数据中心</h1>
-                <p class="text-gray-light text-[clamp(1rem,2vw,1.25rem)]">......</p>
-            </div>
-            
-            <!-- 数据卡片 -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl">
-                <!-- 总销售额 -->
-                <div class="glass-effect rounded-2xl p-6 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-2 hover:shadow-lg hover:shadow-primary/20 group">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h3 class="text-gray-light text-lg">总发货额</h3>
-                            <p id="total-sales" class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold mt-2 number-transition group-hover:text-primary">¥0</p>
+        <!-- 筛选区域 -->
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-8 transform transition-all hover:shadow-xl">
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1">
+                    <label for="article-input" class="block text-sm font-medium text-gray-700 mb-1">款号筛选</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa fa-barcode text-gray-400"></i>
                         </div>
-                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                            <i class="fa-solid fa-chart-line text-xl"></i>
-                        </div>
-                    </div>
-                    <div class="flex items-center">
-                        <span class="text-secondary flex items-center">
-<!--                            <i class="fa-solid fa-arrow-up mr-1"></i> 12.5% -->
-                        </span>
-                        <span class="text-gray-light text-sm ml-2">冲啊冲啊GOGOGO！！！</span>
+                        <input 
+                            type="text" 
+                            id="article-input" 
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                            placeholder="输入款号，多个款号用逗号分隔（如：51125303205,52125303205）"
+                        >
                     </div>
                 </div>
-                
-                <!-- 总目标 -->
-                <div class="glass-effect rounded-2xl p-6 border border-accent/30 hover:border-accent/70 transition-all duration-500 transform hover:-translate-y-2 hover:shadow-lg hover:shadow-accent/20 group">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h3 class="text-gray-light text-lg">发货目标</h3>
-                            <p id="total-target" class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold mt-2 number-transition group-hover:text-accent">¥0</p>
-                        </div>
-                        <div class="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center text-accent">
-                            <i class="fa-solid fa-bullseye text-xl"></i>
-                        </div>
-                    </div>
-                    <div class="flex items-center">
-                        <span class="text-secondary flex items-center">
-  <!--                          <i class="fa-solid fa-arrow-up mr-1"></i> 8.3% -->
-                        </span>
-                        <span class="text-gray-light text-sm ml-2">加油加油Everyone！！！</span>
-                    </div>
+                <div class="flex items-end">
+                    <button 
+                        id="search-btn" 
+                        class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg transition-all flex items-center shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                    >
+                        <i class="fa fa-search mr-2"></i> 查询数据
+                    </button>
                 </div>
-                
-                <!-- 达成率 -->
-                <div class="glass-effect rounded-2xl p-6 border border-secondary/30 hover:border-secondary/70 transition-all duration-500 transform hover:-translate-y-2 hover:shadow-lg hover:shadow-secondary/20 group">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h3 class="text-gray-light text-lg">达成率</h3>
-                            <p id="total-rate" class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold mt-2 number-transition group-hover:text-secondary">0%</p>
-                        </div>
-                        <div class="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
-                            <i class="fa-solid fa-check-circle text-xl"></i>
-                        </div>
-                    </div>
-                    <div class="relative w-full h-3 bg-dark-light rounded-full mt-4 overflow-hidden">
-                        <div id="progress-bar" class="absolute top-0 left-0 h-full bg-gradient-to-r from-secondary to-primary rounded-full transition-all duration-1000" style="width: 0%"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 底部信息 -->
-            <div class="absolute bottom-6 text-center text-gray-light/50 text-sm">
-                <p>© 2025 销售数据可视化平台 | 最后更新: 2025-05-14</p>
             </div>
         </div>
         
-        <!-- 第二屏：渠道详细数据 -->
-        <div id="screen-2" class="min-h-screen flex flex-col px-4 py-8 relative z-10 transition-all duration-1000 translate-y-full opacity-0">
-            <!-- 返回按钮 -->
-            <button id="back-btn" class="glass-effect px-4 py-2 rounded-full flex items-center mb-6 hover:bg-primary/20 transition-all duration-300 transform hover:scale-105">
-                <i class="fa-solid fa-arrow-left mr-2 text-primary"></i>
-                <span>返回概览</span>
-            </button>
-            
-            <!-- 标题 -->
-            <div class="mb-8">
-                <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent mb-2 text-shadow">渠道销售趋势</h2>
-                <p class="text-gray-light">5月9日-5月15日销售趋势分析</p>
-            </div>
-            
-            <!-- 图表区域 -->
-            <div class="glass-effect rounded-2xl p-6 border border-primary/30 mb-8">
-                <h3 class="text-xl font-semibold mb-4">销售额与目标趋势</h3>
-                <div class="h-80">
-                    <canvas id="channels-chart"></canvas>
-                </div>
-            </div>
-            
-            <!-- 渠道数据表格 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <!-- 渠道1 -->
-                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 channel-card" data-channel="旗舰店运营部">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="font-semibold text-lg">旗舰店运营部</h4>
-                        <span class="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs">线上</span>
+        <!-- 加载状态 -->
+        <div id="loading" class="text-center py-12 hidden animate-fade-in">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+            <p class="mt-2 text-gray-600">正在加载数据，请稍候...</p>
+        </div>
+        
+        <!-- 数据概览卡片 -->
+        <div id="stats-container" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 hidden animate-fade-in">
+            <div class="bg-white p-5 rounded-xl shadow-md transform transition-all hover:shadow-lg hover:scale-[1.02]">
+                <div class="flex items-center">
+                    <div class="bg-blue-100 p-3 rounded-lg mr-4">
+                        <i class="fa fa-shopping-bag text-xl text-primary"></i>
                     </div>
-                    <div class="space-y-4">
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>销售份额</span>
-                                <span class="text-white">¥0</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-primary rounded-full" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>累计目标</span>
-                                <span class="text-white">￥0</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-accent rounded-full" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>总计目标</span>
-                                <span class="text-secondary">￥1.2亿</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 100%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 渠道2 -->
-                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 channel-card" data-channel="淘系运营部">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="font-semibold text-lg">淘系运营部</h4>
-                        <span class="px-3 py-1 rounded-full bg-accent/20 text-accent text-xs">线上</span>
-                    </div>
-                    <div class="space-y-4">
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>销售份额</span>
-                                <span class="text-white">¥0</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-primary rounded-full" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>累计目标</span>
-                                <span class="text-white">￥0</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-accent rounded-full" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>总计目标</span>
-                                <span class="text-secondary">￥440万</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 100%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 渠道3 -->
-                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 channel-card" data-channel="京东运营部">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="font-semibold text-lg">京东运营部</h4>
-                        <span class="px-3 py-1 rounded-full bg-accent/20 text-accent text-xs">线上</span>
-                    </div>
-                    <div class="space-y-4">
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>销售份额</span>
-                                <span class="text-white">￥1629.1万</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-primary rounded-full" style="width: 17.7%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>累计目标</span>
-                                <span class="text-white">¥1665.9万</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-accent rounded-full" style="width: 18%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>总计目标</span>
-                                <span class="text-secondary">¥9200万</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 100%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 渠道4 -->
-                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 channel-card" data-channel="渠道运营部">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="font-semibold text-lg">渠道运营部</h4>
-                        <span class="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs">线上</span>
-                    </div>
-                    <div class="space-y-4">
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>销售份额</span>
-                                <span class="text-white">￥922.4万</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-primary rounded-full" style="width: 15%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>累计目标</span>
-                                <span class="text-white">￥580.3万</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-accent rounded-full" style="width: 9%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>总计目标</span>
-                                <span class="text-secondary">￥6149.8万</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 100%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 渠道5 -->
-                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 channel-card" data-channel="得物运营部">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="font-semibold text-lg">得物运营部</h4>
-                        <span class="px-3 py-1 rounded-full bg-accent/20 text-accent text-xs">线上</span>
-                    </div>
-                    <div class="space-y-4">
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>销售份额</span>
-                                <span class="text-white">￥0</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-primary rounded-full" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>累计目标</span>
-                                <span class="text-white">￥0</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-accent rounded-full" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>总计目标</span>
-                                <span class="text-secondary">￥2150.2万</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 100%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 渠道6 -->
-                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 channel-card" data-channel="儿童管理中心">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="font-semibold text-lg">儿童管理中心</h4>
-                        <span class="px-3 py-1 rounded-full bg-accent/20 text-accent text-xs">线上</span>
-                    </div>
-                    <div class="space-y-4">
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>销售份额</span>
-                                <span class="text-white">￥285.6万</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-primary rounded-full" style="width: 7.7%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>累计目标</span>
-                                <span class="text-white">￥212.9万</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-accent rounded-full" style="width: 6%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>总计目标</span>
-                                <span class="text-secondary">￥3700万</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 100%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 渠道7 -->
-                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 channel-card" data-channel="直播运营一部">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="font-semibold text-lg">直播运营一部</h4>
-                        <span class="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs">线上</span>
-                    </div>
-                    <div class="space-y-4">
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>销售份额</span>
-                                <span class="text-white">￥1386.5万</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-primary rounded-full" style="width: 7.6%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>累计目标</span>
-                                <span class="text-white">￥1710万</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-accent rounded-full" style="width: 9%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>总计目标</span>
-                                <span class="text-secondary">￥1.83亿</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 100%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 渠道8 -->
-                <div class="glass-effect rounded-xl p-5 border border-primary/30 hover:border-primary/70 transition-all duration-500 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 channel-card" data-channel="分销部">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="font-semibold text-lg">分销部</h4>
-                        <span class="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs">线上</span>
-                    </div>
-                    <div class="space-y-4">
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>销售份额</span>
-                                <span class="text-white">￥172万</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-primary rounded-full" style="width: 4.9%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>累计目标</span>
-                                <span class="text-white">￥211.4万</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-accent rounded-full" style="width: 6%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm text-gray-light mb-1">
-                                <span>总计目标</span>
-                                <span class="text-secondary">￥4000万</span>
-                            </div>
-                            <div class="w-full h-2 bg-dark-light rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-secondary to-primary rounded-full" style="width: 100%"></div>
-                            </div>
-                        </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">总销量</p>
+                        <p id="total-sales" class="text-2xl font-bold text-neutral">--</p>
                     </div>
                 </div>
             </div>
-            
-            <!-- 总计信息 -->
-            <div class="glass-effect rounded-2xl p-6 border border-secondary/30">
-                <h3 class="text-xl font-semibold mb-4 flex items-center">
-                    <i class="fa-solid fa-calculator text-secondary mr-2"></i>
-                    总销售统计
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="text-center">
-                        <p class="text-gray-light mb-1">总销售份额</p>
-                        <p class="text-2xl font-bold text-white">￥4395.6万</p>
+            <div class="bg-white p-5 rounded-xl shadow-md transform transition-all hover:shadow-lg hover:scale-[1.02]">
+                <div class="flex items-center">
+                    <div class="bg-green-100 p-3 rounded-lg mr-4">
+                        <i class="fa fa-money text-xl text-secondary"></i>
                     </div>
-                    <div class="text-center">
-                        <p class="text-gray-light mb-1">总累计目标</p>
-                        <p class="text-2xl font-bold text-white">¥55440万</p>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">总销额(万)</p>
+                        <p id="total-revenue" class="text-2xl font-bold text-neutral">--</p>
                     </div>
-                    <div class="text-center">
-                        <p class="text-gray-light mb-1">总体达成率</p>
-                        <p class="text-2xl font-bold text-secondary">7.9%</p>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-md transform transition-all hover:shadow-lg hover:scale-[1.02] hidden">
+                <div class="flex items-center">
+                    <div class="bg-purple-100 p-3 rounded-lg mr-4">
+                        <i class="fa fa-tags text-xl text-accent"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">平均折扣</p>
+                        <p id="avg-discount" class="text-2xl font-bold text-neutral">--</p>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- 第三屏：渠道店铺详情 -->
-        <div id="screen-3" class="min-h-screen flex flex-col px-4 py-8 relative z-10 transition-all duration-1000 translate-y-full opacity-0">
-            <!-- 返回按钮 -->
-            <button id="screen3-back-btn" class="glass-effect px-4 py-2 rounded-full flex items-center mb-6 hover:bg-accent/20 transition-all duration-300 transform hover:scale-105">
-                <i class="fa-solid fa-arrow-left mr-2 text-accent"></i>
-                <span>返回渠道列表</span>
-            </button>
-            
-            <!-- 标题区域 -->
-            <div class="mb-8 text-center">
-                <h2 id="screen3-title" class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-transparent bg-clip-text bg-gradient-to-r from-secondary to-accent mb-2 text-shadow">
-                    渠道店铺详情
-                </h2>
-                <p class="text-gray-light">各店铺销售目标与达成情况</p>
+        <!-- 数据表格区域 -->
+        <div id="data-container" class="hidden animate-fade-in">
+            <!-- 未筛选时的简化表格 -->
+            <div id="simplified-table" class="bg-white rounded-xl shadow-lg overflow-hidden table-shadow mb-6 hidden">
+                <div class="p-4 bg-gray-50 border-b">
+                    <h3 class="text-lg font-semibold text-neutral">销售额前10商品</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">款号</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">销量</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">销额(万)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="simplified-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- 数据将通过JavaScript动态插入 -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
             
-            <!-- 店铺数据表格 -->
-            <div class="glass-effect rounded-2xl p-6 border border-secondary/30 overflow-x-auto table-shadow">
-                <table class="w-full min-w-max text-left text-sm text-gray-light table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th scope="col" class="px-6 py-3 border-b-2 border-dark-light font-semibold text-white">
-                                店铺名称
-                            </th>
-                            <th scope="col" class="px-6 py-3 border-b-2 border-dark-light font-semibold text-white">
-                                总目标(万元)
-                            </th>
-                            <th scope="col" class="px-6 py-3 border-b-2 border-dark-light font-semibold text-white">
-                                累计目标(万元)
-                            </th>
-                            <th scope="col" class="px-6 py-3 border-b-2 border-dark-light font-semibold text-white">
-                                累计销售(万元)
-                            </th>
-                            <th scope="col" class="px-6 py-3 border-b-2 border-dark-light font-semibold text-white">
-                                总目标达成率
-                            </th>
-                            <th scope="col" class="px-6 py-3 border-b-2 border-dark-light font-semibold text-white">
-                                累计达成率
-                            </th>
-                            <th scope="col" class="px-6 py-3 border-b-2 border-dark-light font-semibold text-white">
-                                当日目标(万元)
-                            </th>
-                            <th scope="col" class="px-6 py-3 border-b-2 border-dark-light font-semibold text-white">
-                                当日销售(万元)
-                            </th>
-                            <th scope="col" class="px-6 py-3 border-b-2 border-dark-light font-semibold text-white">
-                                当日达成率
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody id="screen3-table-body">
-                        <!-- 动态生成的店铺数据行 -->
-                    </tbody>
-                </table>
+            <!-- 筛选后的完整表格 -->
+            <div id="full-table" class="bg-white rounded-xl shadow-lg overflow-hidden table-shadow">
+                <div class="p-4 bg-gray-50 border-b">
+                    <h3 class="text-lg font-semibold text-neutral">款号详细数据</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">款号</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类目</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">话题</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">部门</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">销量</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">销额(万)</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">件单价</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">折扣</th>
+                            </tr>
+                        </thead>
+                        <tbody id="full-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- 数据将通过JavaScript动态插入 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 空数据提示 -->
+            <div id="empty-data" class="p-12 text-center animate-fade-in">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                    <i class="fa fa-search text-gray-400 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">未找到匹配的数据</h3>
+                <p class="text-gray-500 max-w-md mx-auto">请检查输入的款号是否正确，或尝试其他款号</p>
+            </div>
+        </div>
+        
+        <!-- 错误提示 -->
+        <div id="error" class="hidden animate-fade-in">
+            <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fa fa-exclamation-triangle text-red-500"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">数据加载失败</h3>
+                        <div class="mt-2 text-sm text-red-700" id="error-message">
+                            加载数据时发生错误，请稍后重试
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    
-    <script>
-        // 粒子背景效果
-        function createParticles() {
-            const particlesContainer = document.getElementById('particles');
-            const particleCount = 50;
-            
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                const size = Math.random() * 3 + 1;
-                
-                particle.style.position = 'absolute';
-                particle.style.width = `${size}px`;
-                particle.style.height = `${size}px`;
-                particle.style.background = Math.random() > 0.5 ? '#165DFF' : '#722ED1';
-                particle.style.borderRadius = '50%';
-                particle.style.opacity = Math.random() * 0.5 + 0.2;
-                particle.style.left = `${Math.random() * 100}%`;
-                particle.style.top = `${Math.random() * 100}%`;
-                particle.style.boxShadow = `0 0 10px ${Math.random() > 0.5 ? '#165DFF' : '#722ED1'}`;
-                
-                // 添加动画
-                const duration = Math.random() * 30 + 20;
-                particle.style.animation = `float ${duration}s ease-in-out infinite`;
-                particle.style.animationDelay = `${Math.random() * 10}s`;
-                
-                particlesContainer.appendChild(particle);
-            }
-        }
-        
-        // 数字动画效果
-        function animateNumber(elementId, start, end, duration) {
-            const element = document.getElementById(elementId);
-            const startTime = performance.now();
-            
-            function updateNumber(currentTime) {
-                const elapsedTime = currentTime - startTime;
-                if (elapsedTime < duration) {
-                    const progress = elapsedTime / duration;
-                    const currentValue = Math.floor(start + (end - start) * progress);
-                    element.textContent = `¥${currentValue.toLocaleString()}`;
-                    requestAnimationFrame(updateNumber);
-                } else {
-                    element.textContent = `¥${end.toLocaleString()}`;
-                }
-            }
-            
-            requestAnimationFrame(updateNumber);
-        }
-        
-        // 百分比动画效果
-        function animatePercentage(elementId, start, end, duration) {
-            const element = document.getElementById(elementId);
-            const startTime = performance.now();
-            
-            function updatePercentage(currentTime) {
-                const elapsedTime = currentTime - startTime;
-                if (elapsedTime < duration) {
-                    const progress = elapsedTime / duration;
-                    const currentValue = Math.floor(start + (end - start) * progress);
-                    element.textContent = `${currentValue}%`;
-                    requestAnimationFrame(updatePercentage);
-                } else {
-                    element.textContent = `${end}%`;
-                }
-            }
-            
-            requestAnimationFrame(updatePercentage);
-        }
-        
-        // 进度条动画
-        function animateProgressBar(elementId, start, end, duration) {
-            const element = document.getElementById(elementId);
-            const startTime = performance.now();
-            
-            function updateProgress(currentTime) {
-                const elapsedTime = currentTime - startTime;
-                if (elapsedTime < duration) {
-                    const progress = elapsedTime / duration;
-                    const currentValue = Math.floor(start + (end - start) * progress);
-                    element.style.width = `${currentValue}%`;
-                    requestAnimationFrame(updateProgress);
-                } else {
-                    element.style.width = `${end}%`;
-                }
-            }
-            
-            requestAnimationFrame(updateProgress);
-        }
-        
-        // 屏幕切换
-        function setupScreenTransitions() {
-            const screen1 = document.getElementById('screen-1');
-            const screen2 = document.getElementById('screen-2');
-            const backBtn = document.getElementById('back-btn');
-            
-            // 点击屏幕1切换到屏幕2
-            screen1.addEventListener('click', function(event) {
-                // 排除按钮点击
-                if (!event.target.closest('button')) {
-                    screen1.classList.add('opacity-0');
-                    screen1.classList.remove('translate-y-0');
-                    screen1.classList.add('translate-y-full');
-                    
-                    screen2.classList.remove('translate-y-full');
-                    screen2.classList.remove('opacity-0');
-                    screen2.classList.add('translate-y-0');
-                    
-                    // 初始化图表
-                    initChannelsChart();
-                }
-            });
-            
-            // 返回按钮
-            backBtn.addEventListener('click', function() {
-                screen2.classList.add('translate-y-full');
-                screen2.classList.add('opacity-0');
-                screen2.classList.remove('translate-y-0');
-                
-                screen1.classList.remove('opacity-0');
-                screen1.classList.remove('translate-y-full');
-                screen1.classList.add('translate-y-0');
-            });
-        }
-        
-        // 初始化渠道对比图表（修改为折线图）
-        function initChannelsChart() {
-            const ctx = document.getElementById('channels-chart').getContext('2d');
-            
-            if (window.channelsChart) {
-                window.channelsChart.destroy();
-            }
 
-            // 模拟日期数据（5月9日-5月15日）
-            const dates = ['05/09', '05/10', '05/11', '05/12', '05/13', '05/14', '05/15'];
+    <script>
+        // 防抖函数 - 防止频繁请求
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    func.apply(this, args);
+                }, wait);
+            };
+        }
+        
+        // 金额转万单位，保留两位小数
+        function formatToTenThousand(amount) {
+            if (isNaN(amount) || amount === null) return '0.00';
+            return (amount / 10000).toFixed(2);
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // 获取DOM元素
+            const loading = document.getElementById('loading');
+            const dataContainer = document.getElementById('data-container');
+            const error = document.getElementById('error');
+            const errorMessage = document.getElementById('error-message');
+            const simplifiedTable = document.getElementById('simplified-table');
+            const simplifiedTableBody = document.getElementById('simplified-table-body');
+            const fullTable = document.getElementById('full-table');
+            const fullTableBody = document.getElementById('full-table-body');
+            const emptyData = document.getElementById('empty-data');
+            const articleInput = document.getElementById('article-input');
+            const searchBtn = document.getElementById('search-btn');
+            const statsContainer = document.getElementById('stats-container');
+            const totalSalesEl = document.getElementById('total-sales');
+            const totalRevenueEl = document.getElementById('total-revenue');
+            const avgDiscountEl = document.getElementById('avg-discount');
             
-            window.channelsChart = new Chart(ctx, {
-                type: 'line', // 修改为折线图
-                data: {
-                    labels: dates,
-                    datasets: [
-                        {
-                            label: '日销售',
-                            data: [372.2882, 439.1001, 358.7689, 330.7627, 892.9002, 1061.8568, 939.9315], // 单位：万元
-                            borderColor: '#165DFF',
-                            backgroundColor: 'rgba(22, 93, 255, 0.2)',
-                            borderWidth: 2,
-                            tension: 0.4, // 添加曲线张力
-                            pointRadius: 6,
-                            pointHoverRadius: 8
-                        },
-                        {
-                            label: '日目标',
-                            data: [307.4460, 331.4375, 267.5081, 301.6938, 964.0124, 1285.2499, 923.2562], // 固定目标值
-                            borderColor: '#722ED1',
-                            backgroundColor: 'rgba(114, 46, 209, 0.2)',
-                            borderWidth: 2,
-                            tension: 0.2,
-                            pointRadius: 4,
-                            pointStyle: 'cross'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                color: '#C9CDD4'
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.dataset.label}: ¥${context.parsed.y.toLocaleString()}万`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: {
-                                display: false,
-                                drawBorder: false
-                            },
-                            ticks: {
-                                color: '#C9CDD4',
-                                font: { weight: 500 }
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(255,255,255,0.05)',
-                                borderDash: [5, 5]
-                            },
-                            ticks: {
-                                color: '#C9CDD4',
-                                font: { weight: 400 },
-                                callback: (value) => `¥${value}万`
-                            }
-                        }
-                    },
-                    animation: {
-                        duration: 1500,
-                        easing: 'easeOutQuad'
-                    }
+            // 初始加载数据
+            loadData('');
+            
+            // 绑定查询按钮点击事件（使用防抖）
+            searchBtn.addEventListener('click', debounce(() => {
+                const articleNumbers = articleInput.value.trim();
+                loadData(articleNumbers);
+            }, 300));
+            
+            // 绑定回车键查询（使用防抖）
+            articleInput.addEventListener('keypress', debounce((e) => {
+                if (e.key === 'Enter') {
+                    searchBtn.click();
                 }
-            });
+            }, 300));
+        });
+        
+        // 加载数据函数
+        async function loadData(articleNumbers) {
+            const loading = document.getElementById('loading');
+            const dataContainer = document.getElementById('data-container');
+            const error = document.getElementById('error');
+            const simplifiedTable = document.getElementById('simplified-table');
+            const fullTable = document.getElementById('full-table');
+            const emptyData = document.getElementById('empty-data');
+            const statsContainer = document.getElementById('stats-container');
+            
+            // 显示加载状态
+            loading.classList.remove('hidden');
+            dataContainer.classList.add('hidden');
+            error.classList.add('hidden');
+            simplifiedTable.classList.add('hidden');
+            fullTable.classList.add('hidden');
+            emptyData.classList.add('hidden');
+            statsContainer.classList.add('hidden');
+            
+            try {
+                // 构建查询参数
+                let queryParams = '';
+                if (articleNumbers) {
+                    queryParams = `?article_numbers=${encodeURIComponent(articleNumbers)}`;
+                }
+                
+                // 调用API - 修改为您的服务器IP或域名
+                const response = await fetch(`http://10.5.13.158:5000/get_data${queryParams}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP错误: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // 隐藏加载状态
+                loading.classList.add('hidden');
+                
+                if (data.code === 200) {
+                    if (data.data && data.data.length > 0) {
+                        // 显示数据容器和统计信息
+                        dataContainer.classList.remove('hidden');
+                        statsContainer.classList.remove('hidden');
+                        
+                        // 根据是否有筛选条件显示不同表格
+                        if (articleNumbers) {
+                            // 筛选后显示完整表格
+                            fullTable.classList.remove('hidden');
+                            renderFullTable(data.data);
+                        } else {
+                            // 未筛选时显示简化表格（前10条）
+                            const sortedData = sortByRevenueDesc(data.data);
+                            const top10Data = sortedData.slice(0, 10);
+                            simplifiedTable.classList.remove('hidden');
+                            renderSimplifiedTable(top10Data);
+                        }
+                        
+                        // 更新统计信息
+                        updateStats(data.data);
+                    } else {
+                        // 显示空数据提示
+                        dataContainer.classList.remove('hidden');
+                        emptyData.classList.remove('hidden');
+                    }
+                } else {
+                    // 显示错误信息
+                    errorMessage.textContent = data.message || '获取数据失败';
+                    error.classList.remove('hidden');
+                }
+            } catch (error) {
+                // 隐藏加载状态，显示错误信息
+                loading.classList.add('hidden');
+                errorMessage.textContent = `加载失败: ${error.message}`;
+                error.classList.remove('hidden');
+                console.error('API请求错误:', error);
+            }
         }
         
-        // 模拟各渠道的店铺数据（可替换为真实数据接口）
-        const channelStoresData = {
-            '旗舰店运营部': [
-                { store: '官方旗舰店', total: 8000, accumulativeTarget: 6000, accumulativeSales: 5500, totalRate: 68.75, accumulativeRate: 91.67, dailyTarget: 300, dailySales: 280, dailyRate: 93.33 },
-                { store: '品牌旗舰店', total: 4000, accumulativeTarget: 3000, accumulativeSales: 2800, totalRate: 70, accumulativeRate: 93.33, dailyTarget: 150, dailySales: 140, dailyRate: 93.33 }
-            ],
-            '淘系运营部': [
-                { store: '天猫旗舰店', total: 440, accumulativeTarget: 440, accumulativeSales: 300, totalRate: 68.18, accumulativeRate: 68.18, dailyTarget: 20, dailySales: 18, dailyRate: 90 }
-            ],
-            '京东运营部': [
-                { store: '京东自营店', total: 5000, accumulativeTarget: 3000, accumulativeSales: 2500, totalRate: 50, accumulativeRate: 83.33, dailyTarget: 200, dailySales: 180, dailyRate: 90 },
-                { store: '京东旗舰店', total: 4200, accumulativeTarget: 2800, accumulativeSales: 2300, totalRate: 54.76, accumulativeRate: 82.14, dailyTarget: 180, dailySales: 160, dailyRate: 88.89 }
-            ],
-            '渠道运营部': [
-                { store: '拼多多旗舰店', total: 3000, accumulativeTarget: 2000, accumulativeSales: 1800, totalRate: 60, accumulativeRate: 90, dailyTarget: 100, dailySales: 95, dailyRate: 95 },
-                { store: '唯品会旗舰店', total: 2649.8, accumulativeTarget: 1766.5, accumulativeSales: 1500, totalRate: 56.6, accumulativeRate: 84.9, dailyTarget: 85, dailySales: 75, dailyRate: 88.24 }
-            ],
-            '得物运营部': [
-                { store: '得物旗舰店', total: 2650.2, accumulativeTarget: 1766.8, accumulativeSales: 89.3, totalRate: 3.37, accumulativeRate: 5.05, dailyTarget: 15, dailySales: 12, dailyRate: 80 }
-            ],
-            '儿童管理中心': [
-                { store: '儿童旗舰店', total: 2000, accumulativeTarget: 1320, accumulativeSales: 150, totalRate: 7.5, accumulativeRate: 11.36, dailyTarget: 10, dailySales: 8, dailyRate: 80 },
-                { store: '童装专卖店', total: 1700, accumulativeTarget: 1122, accumulativeSales: 58.1, totalRate: 3.42, accumulativeRate: 5.18, dailyTarget: 8, dailySales: 6, dailyRate: 75 }
-            ],
-            '直播运营一部': [
-                { store: '抖音直播间', total: 12000, accumulativeTarget: 7920, accumulativeSales: 6000, totalRate: 50, accumulativeRate: 75.76, dailyTarget: 500, dailySales: 450, dailyRate: 90 },
-                { store: '快手直播间', total: 6300, accumulativeTarget: 4158, accumulativeSales: 3643, totalRate: 57.83, accumulativeRate: 87.62, dailyTarget: 260, dailySales: 230, dailyRate: 88.46 },
-                { store: '淘宝直播间', total: 6300, accumulativeTarget: 4158, accumulativeSales: 600, totalRate: 9.52, accumulativeRate: 14.43, dailyTarget: 240, dailySales: 180, dailyRate: 75 }
-            ],
-            '分销部': [
-                { store: '经销商A', total: 1500, accumulativeTarget: 990, accumulativeSales: 550, totalRate: 36.67, accumulativeRate: 55.56, dailyTarget: 50, dailySales: 45, dailyRate: 90 },
-                { store: '经销商B', total: 1000, accumulativeTarget: 660, accumulativeSales: 450, totalRate: 45, accumulativeRate: 68.18, dailyTarget: 35, dailySales: 30, dailyRate: 85.71 },
-                { store: '经销商C', total: 1000, accumulativeTarget: 660, accumulativeSales: 258.8, totalRate: 25.88, accumulativeRate: 39.21, dailyTarget: 30, dailySales: 25, dailyRate: 83.33 }
-            ]
-        };
-        
-        // 初始化第三屏跳转事件
-        function setupScreen3Transitions() {
-            const channelCards = document.querySelectorAll('.channel-card');
-            
-            channelCards.forEach(card => {
-                card.addEventListener('click', function() {
-                    const channelName = this.getAttribute('data-channel');
-                    showScreen3(channelName);
-                });
-            });
+        // 按销售额降序排序
+        function sortByRevenueDesc(data) {
+            return [...data].sort((a, b) => 
+                parseFloat(b['销额']) - parseFloat(a['销额'])
+            );
         }
         
-        // 显示第三屏并加载对应数据
-        function showScreen3(channelName) {
-            const screen3 = document.getElementById('screen-3');
-            const screen3Title = document.getElementById('screen3-title');
-            const tableBody = document.getElementById('screen3-table-body');
-            
-            // 更新标题
-            screen3Title.textContent = `${channelName} - 店铺详情`;
-            
-            // 获取对应渠道的店铺数据
-            const stores = channelStoresData[channelName] || [];
-            
-            // 清空表格
+        // 渲染简化表格（未筛选时）
+        function renderSimplifiedTable(data) {
+            const tableBody = document.getElementById('simplified-table-body');
             tableBody.innerHTML = '';
             
-            // 填充表格数据
-            stores.forEach(store => {
+            data.forEach((item, index) => {
                 const row = document.createElement('tr');
-                row.className = 'hover:bg-primary/10 transition-all duration-300';
+                row.className = 'hover:bg-gray-50 transition-colors';
                 
-                // 计算达成率样式
-                const totalRateClass = getRateClass(store.totalRate);
-                const accumulativeRateClass = getRateClass(store.accumulativeRate);
-                const dailyRateClass = getRateClass(store.dailyRate);
+                // 格式化销售额为万单位
+                const revenue = formatToTenThousand(item['销额']);
                 
                 row.innerHTML = `
-                    <td class="px-6 py-4 border-b border-dark-light">${store.store}</td>
-                    <td class="px-6 py-4 border-b border-dark-light">${store.total}</td>
-                    <td class="px-6 py-4 border-b border-dark-light">${store.accumulativeTarget}</td>
-                    <td class="px-6 py-4 border-b border-dark-light">${store.accumulativeSales}</td>
-                    <td class="px-6 py-4 border-b border-dark-light ${totalRateClass}">${store.totalRate}%</td>
-                    <td class="px-6 py-4 border-b border-dark-light ${accumulativeRateClass}">${store.accumulativeRate}%</td>
-                    <td class="px-6 py-4 border-b border-dark-light">${store.dailyTarget}</td>
-                    <td class="px-6 py-4 border-b border-dark-light">${store.dailySales}</td>
-                    <td class="px-6 py-4 border-b border-dark-light ${dailyRateClass}">${store.dailyRate}%</td>
+                    <td class="px-6 py-4 whitespace-nowrap font-medium">${item['款号']}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${item['销量']}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${revenue}</td>
                 `;
                 
                 tableBody.appendChild(row);
             });
+        }
+        
+        // 渲染完整表格（筛选后）
+        function renderFullTable(data) {
+            const tableBody = document.getElementById('full-table-body');
+            tableBody.innerHTML = '';
             
-            // 显示第三屏
-            screen3.classList.remove('translate-y-full', 'opacity-0');
-            screen3.classList.add('translate-y-0', 'opacity-1');
-            
-            // 返回按钮事件
-            document.getElementById('screen3-back-btn').addEventListener('click', function() {
-                screen3.classList.add('translate-y-full', 'opacity-0');
-                screen3.classList.remove('translate-y-0', 'opacity-1');
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors';
+                
+                // 格式化数据
+                const revenue = formatToTenThousand(item['销额']);
+                const unitPrice = item['件单价'] !== null ? parseFloat(item['件单价']).toFixed(2) : 'N/A';
+                const discount = item['折扣'] !== null ? parseFloat(item['折扣']).toFixed(2) : 'N/A';
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap font-medium">${item['款号']}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${item['类目'] || '无'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${item['话题'] || '无'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${item['部门'] || '无'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${item['销量']}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${revenue}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${unitPrice}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${discount}</td>
+                `;
+                
+                tableBody.appendChild(row);
             });
         }
         
-        // 根据达成率返回样式类
-        function getRateClass(rate) {
-            if (rate >= 90) return 'text-secondary';
-            if (rate >= 70) return 'text-green-400';
-            if (rate >= 50) return 'text-yellow-400';
-            return 'text-red-400';
-        }
-        
-        // 页面加载完成后初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            createParticles();
-            setupScreenTransitions();
-            setupScreen3Transitions();
+        // 更新统计信息
+        function updateStats(data) {
+            // 计算总销量、总销额
+            const totalSales = data.reduce((sum, item) => sum + parseFloat(item['销量']), 0);
+            const totalRevenue = data.reduce((sum, item) => sum + parseFloat(item['销额']), 0);
             
-            // 初始动画
-            setTimeout(() => {
-                animateNumber('total-sales', 0, 43956084, 2000);
-                animateNumber('total-target', 0, 554400000, 2000);
-                animatePercentage('total-rate', 0, 7.9, 2000);
-                animateProgressBar('progress-bar', 0, 7.9, 2000);
-            }, 500);
-        });
+            // 更新DOM（销售额以万为单位）
+            totalSalesEl.textContent = totalSales.toLocaleString();
+            totalRevenueEl.textContent = formatToTenThousand(totalRevenue);
+        }
     </script>
 </body>
-</html>    
+</html>
