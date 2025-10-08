@@ -3,399 +3,1384 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>销售数据分析</title>
+    <title>鸿星尔克电商销售数据BI看板</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    
+    <!-- 配置Tailwind自定义主题 -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        primary: '#3B82F6',
-                        secondary: '#10B981',
-                        accent: '#8B5CF6',
-                        neutral: '#1F2937',
+                        primary: '#165DFF',
+                        secondary: '#36CFC9',
+                        success: '#52C41A',
+                        warning: '#FAAD14',
+                        danger: '#FF4D4F',
+                        dark: {
+                            100: '#1D2129',
+                            200: '#141414',
+                            300: '#0F172A',
+                            400: '#0A0F1C'
+                        },
+                        light: {
+                            100: '#F2F3F5',
+                            200: '#E5E6EB',
+                            300: '#C9CDD4',
+                            400: '#86909C'
+                        }
                     },
                     fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
                     },
+                    boxShadow: {
+                        'glow': '0 0 15px rgba(22, 93, 255, 0.3)',
+                        'card': '0 4px 20px rgba(0, 0, 0, 0.15)',
+                    }
                 }
             }
         }
     </script>
+    
+    <!-- 自定义工具类 -->
     <style type="text/tailwindcss">
         @layer utilities {
             .content-auto {
                 content-visibility: auto;
             }
-            .table-shadow {
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             }
-            .animate-fade-in {
-                animation: fadeIn 0.3s ease-in-out;
+            .text-shadow-glow {
+                text-shadow: 0 0 10px rgba(22, 93, 255, 0.5);
             }
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(10px); }
-                to { opacity: 1; transform: translateY(0); }
+            .bg-grid {
+                background-image: linear-gradient(rgba(22, 93, 255, 0.05) 1px, transparent 1px),
+                                 linear-gradient(90deg, rgba(22, 93, 255, 0.05) 1px, transparent 1px);
+                background-size: 20px 20px;
+            }
+            .scrollbar-thin {
+                scrollbar-width: thin;
+            }
+            .scrollbar-thin::-webkit-scrollbar {
+                width: 4px;
+                height: 4px;
+            }
+            .scrollbar-thin::-webkit-scrollbar-thumb {
+                background-color: rgba(22, 93, 255, 0.3);
+                border-radius: 2px;
+            }
+            .dept-link {
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+            .dept-link:hover {
+                color: #165DFF;
+                text-decoration: underline;
+                text-underline-offset: 2px;
             }
         }
     </style>
-</head>
-<body class="bg-gray-50 min-h-screen font-sans">
-    <div class="container mx-auto px-4 py-8 max-w-6xl">
-        <!-- 页面标题 -->
-        <header class="mb-8 text-center">
-            <h1 class="text-3xl md:text-4xl font-bold text-neutral mb-2">销售数据分析平台</h1>
-            <p class="text-gray-500 max-w-2xl mx-auto">通过款号筛选查看销售数据，未筛选时显示销售额前10的商品</p>
-        </header>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
-        <!-- 筛选区域 -->
-        <div class="bg-white p-6 rounded-xl shadow-lg mb-8 transform transition-all hover:shadow-xl">
-            <div class="flex flex-col md:flex-row gap-4">
-                <div class="flex-1">
-                    <label for="article-input" class="block text-sm font-medium text-gray-700 mb-1">款号筛选</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fa fa-barcode text-gray-400"></i>
-                        </div>
-                        <input 
-                            type="text" 
-                            id="article-input" 
-                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                            placeholder="输入款号，多个款号用逗号分隔（如：51125303205,52125303205）"
-                        >
-                    </div>
-                </div>
-                <div class="flex items-end">
-                    <button 
-                        id="search-btn" 
-                        class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg transition-all flex items-center shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                    >
-                        <i class="fa fa-search mr-2"></i> 查询数据
-                    </button>
-                </div>
-            </div>
-        </div>
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: #0A0F1C;
+            background-image: 
+                radial-gradient(circle at 15% 25%, rgba(22, 93, 255, 0.1) 0%, transparent 25%),
+                radial-gradient(circle at 85% 75%, rgba(22, 93, 255, 0.1) 0%, transparent 25%);
+            background-attachment: fixed;
+        }
         
-        <!-- 加载状态 -->
-        <div id="loading" class="text-center py-12 hidden animate-fade-in">
-            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-            <p class="mt-2 text-gray-600">正在加载数据，请稍候...</p>
-        </div>
+        .card-hover {
+            transition: all 0.3s ease;
+        }
         
-        <!-- 数据概览卡片 -->
-        <div id="stats-container" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 hidden animate-fade-in">
-            <div class="bg-white p-5 rounded-xl shadow-md transform transition-all hover:shadow-lg hover:scale-[1.02]">
-                <div class="flex items-center">
-                    <div class="bg-blue-100 p-3 rounded-lg mr-4">
-                        <i class="fa fa-shopping-bag text-xl text-primary"></i>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500">总销量</p>
-                        <p id="total-sales" class="text-2xl font-bold text-neutral">--</p>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white p-5 rounded-xl shadow-md transform transition-all hover:shadow-lg hover:scale-[1.02]">
-                <div class="flex items-center">
-                    <div class="bg-green-100 p-3 rounded-lg mr-4">
-                        <i class="fa fa-money text-xl text-secondary"></i>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500">总销额(万)</p>
-                        <p id="total-revenue" class="text-2xl font-bold text-neutral">--</p>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white p-5 rounded-xl shadow-md transform transition-all hover:shadow-lg hover:scale-[1.02] hidden">
-                <div class="flex items-center">
-                    <div class="bg-purple-100 p-3 rounded-lg mr-4">
-                        <i class="fa fa-tags text-xl text-accent"></i>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500">平均折扣</p>
-                        <p id="avg-discount" class="text-2xl font-bold text-neutral">--</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        .card-hover:hover {
+            transform: translateY(-5px);
+        }
         
-        <!-- 数据表格区域 -->
-        <div id="data-container" class="hidden animate-fade-in">
-            <!-- 未筛选时的简化表格 -->
-            <div id="simplified-table" class="bg-white rounded-xl shadow-lg overflow-hidden table-shadow mb-6 hidden">
-                <div class="p-4 bg-gray-50 border-b">
-                    <h3 class="text-lg font-semibold text-neutral">销售额前10商品</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">款号</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">销量</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">销额(万)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="simplified-table-body" class="bg-white divide-y divide-gray-200">
-                            <!-- 数据将通过JavaScript动态插入 -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- 筛选后的完整表格 -->
-            <div id="full-table" class="bg-white rounded-xl shadow-lg overflow-hidden table-shadow">
-                <div class="p-4 bg-gray-50 border-b">
-                    <h3 class="text-lg font-semibold text-neutral">款号详细数据</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">款号</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类目</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">话题</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">部门</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">销量</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">销额(万)</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">件单价</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">折扣</th>
-                            </tr>
-                        </thead>
-                        <tbody id="full-table-body" class="bg-white divide-y divide-gray-200">
-                            <!-- 数据将通过JavaScript动态插入 -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- 空数据提示 -->
-            <div id="empty-data" class="p-12 text-center animate-fade-in">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-                    <i class="fa fa-search text-gray-400 text-2xl"></i>
-                </div>
-                <h3 class="text-lg font-medium text-gray-900 mb-2">未找到匹配的数据</h3>
-                <p class="text-gray-500 max-w-md mx-auto">请检查输入的款号是否正确，或尝试其他款号</p>
-            </div>
-        </div>
+        .animate-value {
+            animation: valueChange 1.5s ease-out forwards;
+        }
         
-        <!-- 错误提示 -->
-        <div id="error" class="hidden animate-fade-in">
-            <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg mb-6">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <i class="fa fa-exclamation-triangle text-red-500"></i>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800">数据加载失败</h3>
-                        <div class="mt-2 text-sm text-red-700" id="error-message">
-                            加载数据时发生错误，请稍后重试
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+        @keyframes valueChange {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        .tab-indicator {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, #1D2129 25%, #2a2f3a 50%, #1D2129 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+        }
+        
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
 
-    <script>
-        // 防抖函数 - 防止频繁请求
-        function debounce(func, wait) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => {
-                    func.apply(this, args);
-                }, wait);
-            };
+        /* 表格行悬停效果 */
+        .table-row-hover {
+            transition: background-color 0.2s ease;
         }
         
-        // 金额转万单位，保留两位小数
-        function formatToTenThousand(amount) {
-            if (isNaN(amount) || amount === null) return '0.00';
-            return (amount / 10000).toFixed(2);
+        .table-row-hover:hover {
+            background-color: rgba(22, 93, 255, 0.1);
         }
         
-        document.addEventListener('DOMContentLoaded', () => {
-            // 获取DOM元素
-            const loading = document.getElementById('loading');
-            const dataContainer = document.getElementById('data-container');
-            const error = document.getElementById('error');
-            const errorMessage = document.getElementById('error-message');
-            const simplifiedTable = document.getElementById('simplified-table');
-            const simplifiedTableBody = document.getElementById('simplified-table-body');
-            const fullTable = document.getElementById('full-table');
-            const fullTableBody = document.getElementById('full-table-body');
-            const emptyData = document.getElementById('empty-data');
-            const articleInput = document.getElementById('article-input');
-            const searchBtn = document.getElementById('search-btn');
-            const statsContainer = document.getElementById('stats-container');
-            const totalSalesEl = document.getElementById('total-sales');
-            const totalRevenueEl = document.getElementById('total-revenue');
-            const avgDiscountEl = document.getElementById('avg-discount');
-            
-            // 初始加载数据
-            loadData('');
-            
-            // 绑定查询按钮点击事件（使用防抖）
-            searchBtn.addEventListener('click', debounce(() => {
-                const articleNumbers = articleInput.value.trim();
-                loadData(articleNumbers);
-            }, 300));
-            
-            // 绑定回车键查询（使用防抖）
-            articleInput.addEventListener('keypress', debounce((e) => {
-                if (e.key === 'Enter') {
-                    searchBtn.click();
-                }
-            }, 300));
-        });
-        
-        // 加载数据函数
-        async function loadData(articleNumbers) {
-            const loading = document.getElementById('loading');
-            const dataContainer = document.getElementById('data-container');
-            const error = document.getElementById('error');
-            const simplifiedTable = document.getElementById('simplified-table');
-            const fullTable = document.getElementById('full-table');
-            const emptyData = document.getElementById('empty-data');
-            const statsContainer = document.getElementById('stats-container');
-            
-            // 显示加载状态
-            loading.classList.remove('hidden');
-            dataContainer.classList.add('hidden');
-            error.classList.add('hidden');
-            simplifiedTable.classList.add('hidden');
-            fullTable.classList.add('hidden');
-            emptyData.classList.add('hidden');
-            statsContainer.classList.add('hidden');
-            
-            try {
-                // 构建查询参数
-                let queryParams = '';
-                if (articleNumbers) {
-                    queryParams = `?article_numbers=${encodeURIComponent(articleNumbers)}`;
-                }
-                
-                // 调用API - 修改为您的服务器IP或域名
-                const response = await fetch(`http://10.5.13.158:5000/get_data${queryParams}`);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP错误: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                // 隐藏加载状态
-                loading.classList.add('hidden');
-                
-                if (data.code === 200) {
-                    if (data.data && data.data.length > 0) {
-                        // 显示数据容器和统计信息
-                        dataContainer.classList.remove('hidden');
-                        statsContainer.classList.remove('hidden');
-                        
-                        // 根据是否有筛选条件显示不同表格
-                        if (articleNumbers) {
-                            // 筛选后显示完整表格
-                            fullTable.classList.remove('hidden');
-                            renderFullTable(data.data);
-                        } else {
-                            // 未筛选时显示简化表格（前10条）
-                            const sortedData = sortByRevenueDesc(data.data);
-                            const top10Data = sortedData.slice(0, 10);
-                            simplifiedTable.classList.remove('hidden');
-                            renderSimplifiedTable(top10Data);
-                        }
-                        
-                        // 更新统计信息
-                        updateStats(data.data);
-                    } else {
-                        // 显示空数据提示
-                        dataContainer.classList.remove('hidden');
-                        emptyData.classList.remove('hidden');
-                    }
-                } else {
-                    // 显示错误信息
-                    errorMessage.textContent = data.message || '获取数据失败';
-                    error.classList.remove('hidden');
-                }
-            } catch (error) {
-                // 隐藏加载状态，显示错误信息
-                loading.classList.add('hidden');
-                errorMessage.textContent = `加载失败: ${error.message}`;
-                error.classList.remove('hidden');
-                console.error('API请求错误:', error);
-            }
+        /* 进度条样式 */
+        .progress-bar {
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
         }
         
-        // 按销售额降序排序
-        function sortByRevenueDesc(data) {
-            return [...data].sort((a, b) => 
-                parseFloat(b['销额']) - parseFloat(a['销额'])
-            );
+        .progress-value {
+            height: 100%;
+            transition: width 0.5s ease;
         }
-        
-        // 渲染简化表格（未筛选时）
-        function renderSimplifiedTable(data) {
-            const tableBody = document.getElementById('simplified-table-body');
-            tableBody.innerHTML = '';
+
+        /* 详情页样式 */
+        .back-btn {
+            transition: all 0.2s ease;
+        }
+        .back-btn:hover {
+            background-color: rgba(22, 93, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="text-light-100 min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header class="bg-dark-100/80 backdrop-blur-md border-b border-primary/20 sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+                    <i class="fa fa-line-chart text-white text-xl"></i>
+                </div>
+                <h1 class="text-xl font-bold text-white">鸿星尔克电商销售数据平台</h1>
+            </div>
             
-            data.forEach((item, index) => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50 transition-colors';
+            <div class="flex items-center space-x-6">
+                <div class="flex items-center space-x-2 text-light-300">
+                    <i class="fa fa-calendar-o"></i>
+                    <span id="current-date">2025年8月27日</span>
+                </div>
                 
-                // 格式化销售额为万单位
-                const revenue = formatToTenThousand(item['销额']);
+                <div class="flex items-center space-x-2 text-light-300">
+                    <i class="fa fa-refresh"></i>
+                    <span id="last-update">最后更新: 10:30</span>
+                </div>
                 
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap font-medium">${item['款号']}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${item['销量']}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${revenue}</td>
-                `;
-                
-                tableBody.appendChild(row);
-            });
-        }
-        
-        // 渲染完整表格（筛选后）
-        function renderFullTable(data) {
-            const tableBody = document.getElementById('full-table-body');
-            tableBody.innerHTML = '';
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                        <i class="fa fa-user text-primary"></i>
+                    </div>
+                    <span class="font-medium">数据分析师</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区域 -->
+    <div id="dashboard-container" class="container mx-auto px-4 py-6">
+        <!-- 看板标题与状态 -->
+        <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between">
+            <div>
+                <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-white text-shadow-glow mb-2">销售数据总览</h2>
+                <p class="text-light-300">实时监控各渠道销售表现与关键指标</p>
+            </div>
             
-            data.forEach(item => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50 transition-colors';
+            <div class="mt-4 md:mt-0 flex items-center space-x-4">
+                <div class="inline-flex items-center px-3 py-1.5 rounded-full bg-success/10 border border-success/30 text-success text-sm">
+                    <span class="w-2 h-2 rounded-full bg-success mr-2 pulse"></span>
+                    数据同步中
+                </div>
                 
-                // 格式化数据
-                const revenue = formatToTenThousand(item['销额']);
-                const unitPrice = item['件单价'] !== null ? parseFloat(item['件单价']).toFixed(2) : 'N/A';
-                const discount = item['折扣'] !== null ? parseFloat(item['折扣']).toFixed(2) : 'N/A';
-                
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap font-medium">${item['款号']}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${item['类目'] || '无'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${item['话题'] || '无'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${item['部门'] || '无'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${item['销量']}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${revenue}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${unitPrice}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${discount}</td>
-                `;
-                
-                tableBody.appendChild(row);
-            });
-        }
+                <button class="px-4 py-2 rounded-lg bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 transition-colors flex items-center">
+                    <i class="fa fa-download mr-2"></i>
+                    导出报告
+                </button>
+            </div>
+        </div>
         
-        // 更新统计信息
-        function updateStats(data) {
-            // 计算总销量、总销额
-            const totalSales = data.reduce((sum, item) => sum + parseFloat(item['销量']), 0);
-            const totalRevenue = data.reduce((sum, item) => sum + parseFloat(item['销额']), 0);
+        <!-- 标签切换 -->
+        <div class="mb-6 bg-dark-100/50 rounded-xl p-1 relative">
+            <div class="flex" id="tabs-container">
+                <button class="tab-btn flex-1 py-3 px-4 rounded-lg font-medium transition-all relative z-10" data-tab="daily">
+                    日数据
+                </button>
+                <button class="tab-btn active flex-1 py-3 px-4 rounded-lg font-medium transition-all relative z-10" data-tab="monthly">
+                    月数据
+                </button>
+                <button class="tab-btn flex-1 py-3 px-4 rounded-lg font-medium transition-all relative z-10" data-tab="yearly">
+                    年数据
+                </button>
+            </div>
+            <div class="tab-indicator absolute top-1 left-1 h-[calc(100%-8px)] rounded-lg bg-primary/20 border border-primary/40 w-[calc(33.333%-8px)]"></div>
+        </div>
+        
+        <!-- 核心指标卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-dark-100/70 backdrop-blur-sm rounded-xl p-5 border border-primary/10 shadow-card card-hover">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <p class="text-light-300 text-sm">总销售额</p>
+                        <h3 class="text-2xl font-bold text-white mt-1 animate-value" id="total-sales">¥14546.8万</h3>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                        <i class="fa fa-rmb"></i>
+                    </div>
+                </div>
+                <div class="flex items-center text-success text-sm">
+                    <i class="fa fa-arrow-up mr-1"></i>
+                    <span>102% 同比增长</span>
+                </div>
+            </div>
             
-            // 更新DOM（销售额以万为单位）
-            totalSalesEl.textContent = totalSales.toLocaleString();
-            totalRevenueEl.textContent = formatToTenThousand(totalRevenue);
-        }
-    </script>
-</body>
-</html>
+            <div class="bg-dark-100/70 backdrop-blur-sm rounded-xl p-5 border border-primary/10 shadow-card card-hover">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <p class="text-light-300 text-sm">销售目标达成</p>
+                        <h3 class="text-2xl font-bold text-white mt-1 animate-value" id="target-achievement">55%</h3>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center text-warning">
+                        <i class="fa fa-tasks"></i>
+                    </div>
+                </div>
+                <div class="w-full bg-dark-300/50 rounded-full h-2 mt-2">
+                    <div class="bg-warning h-2 rounded-full" id="achievement-bar" style="width: 55%"></div>
+                </div>
+            </div>
+            
+            <div class="bg-dark-100/70 backdrop-blur-sm rounded-xl p-5 border border-primary/10 shadow-card card-hover">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <p class="text-light-300 text-sm">平均折扣</p>
+                        <h3 class="text-2xl font-bold text-white mt-1 animate-value" id="avg-discount">0.427</h3>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+                        <i class="fa fa-percent"></i>
+                    </div>
+                </div>
+                <div class="flex items-center text-success text-sm">
+                    <i class="fa fa-arrow-down mr-1"></i>
+                    <span>较去年降低4.5%</span>
+                </div>
+            </div>
+            
+            <div class="bg-dark-100/70 backdrop-blur-sm rounded-xl p-5 border border-primary/10 shadow-card card-hover">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <p class="text-light-300 text-sm">退货率</p>
+                        <h3 class="text-2xl font-bold text-white mt-1 animate-value" id="return-rate">19%</h3>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-danger/10 flex items-center justify-center text-danger">
+                        <i class="fa fa-exchange"></i>
+                    </div>
+                </div>
+                <div class="flex items-center text-success text-sm">
+                    <i class="fa fa-arrow-down mr-1"></i>
+                    <span>较去年降低2%</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主要内容区域 - 部门销售表格 -->
+        <div class="grid grid-cols-1 gap-6 mb-6">
+            <!-- 部门销售表格 -->
+            <div class="bg-dark-100/70 backdrop-blur-sm rounded-xl p-5 border border-primary/10 shadow-card">
+                <div class="flex justify-between items-center mb-5">
+                    <h3 class="font-semibold text-white">各部门销售表现</h3>
+                    <div class="relative">
+                        <input type="text" placeholder="搜索部门..." class="bg-dark-300/30 border border-primary/20 rounded-lg px-3 py-2 text-sm pl-9 focus:outline-none focus:ring-1 focus:ring-primary w-40">
+                        <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-light-300 text-sm"></i>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto scrollbar-thin">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="border-b border-primary/10" id="table-header">
+                                <th class="text-left py-3 px-4 text-light-300 font-medium text-sm">部门</th>
+                                <th class="text-right py-3 px-4 text-light-300 font-medium text-sm">销售额</th>
+                                <th class="text-right py-3 px-4 text-light-300 font-medium text-sm">去年同期</th>
+                                <th class="text-right py-3 px-4 text-light-300 font-medium text-sm">同比</th>
+                                <th class="text-right py-3 px-4 text-light-300 font-medium text-sm">折扣</th>
+                                <th class="text-right py-3 px-4 text-light-300 font-medium text-sm">退货率</th>
+                            </tr>
+                        </thead>
+                        <tbody id="departments-table">
+                            <!-- 表格内容将通过JavaScript动态填充 -->
+                        </tbody>
+                    </table>
+                </div></div>
+        </div>
+	
+	<!-- 销售趋势图 -->
+	<div class="grid grid-cols-1 gap-6" id="trend-chart-container">
+		<div class="bg-dark-100/70 backdrop-blur-sm rounded-xl p-5 border border-primary/10 shadow-card">
+			<div class="flex justify-between items-center mb-5">
+				<h3 class="font-semibold text-white">销售趋势</h3>
+				<div class="text-xs text-light-300 bg-dark-300/30 px-2 py-1 rounded" id="trend-period">
+					8月1日-8月26日
+				</div>
+			</div>
+			<div class="h-[300px]">
+				<canvas id="sales-trend-chart"></canvas>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- 部门详情页容器（默认隐藏） -->
+<div id="department-detail-container" class="hidden container mx-auto px-4 py-6">
+	<div class="mb-6">
+		<button id="back-to-dashboard" class="back-btn inline-flex items-center px-4 py-2 rounded-lg bg-primary/10 border border-primary/30 text-primary mb-6">
+			<i class="fa fa-arrow-left mr-2"></i>
+			返回总览
+		</button>
+		
+		<h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-white text-shadow-glow mb-2" id="detail-department-name">
+			渠道运营部 - 店铺销售详情
+		</h2>
+		<p class="text-light-300">各店铺日月年销售数据明细</p>
+	</div>
+	
+	<!-- 标签切换 -->
+	<div class="mb-6 bg-dark-100/50 rounded-xl p-1 relative">
+		<div class="flex" id="detail-tabs-container">
+			<button class="tab-btn active flex-1 py-3 px-4 rounded-lg font-medium transition-all relative z-10" data-tab="daily">
+				日数据
+			</button>
+			<button class="tab-btn flex-1 py-3 px-4 rounded-lg font-medium transition-all relative z-10" data-tab="monthly">
+				月数据
+			</button>
+			<button class="tab-btn flex-1 py-3 px-4 rounded-lg font-medium transition-all relative z-10" data-tab="yearly">
+				年数据
+			</button>
+		</div>
+		<div class="tab-indicator absolute top-1 left-1 h-[calc(100%-8px)] rounded-lg bg-primary/20 border border-primary/40 w-[calc(33.333%-8px)]"></div>
+	</div>
+	
+	<!-- 店铺销售表格 -->
+	<div class="bg-dark-100/70 backdrop-blur-sm rounded-xl p-5 border border-primary/10 shadow-card">
+		<div class="flex justify-between items-center mb-5">
+			<h3 class="font-semibold text-white" id="store-table-title">店铺销售表现（日数据）</h3>
+			<div class="relative">
+				<input type="text" placeholder="搜索店铺..." class="bg-dark-300/30 border border-primary/20 rounded-lg px-3 py-2 text-sm pl-9 focus:outline-none focus:ring-1 focus:ring-primary w-40">
+				<i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-light-300 text-sm"></i>
+			</div>
+		</div>
+		
+		<div class="overflow-x-auto scrollbar-thin">
+			<table class="min-w-full">
+				<thead>
+					<tr class="border-b border-primary/10" id="store-table-header">
+						<th class="text-left py-3 px-4 text-light-300 font-medium text-sm">店铺名称</th>
+						<th class="text-right py-3 px-4 text-light-300 font-medium text-sm">销售额</th>
+						<th class="text-right py-3 px-4 text-light-300 font-medium text-sm">去年同期</th>
+						<th class="text-right py-3 px-4 text-light-300 font-medium text-sm">同比</th>
+						<th class="text-right py-3 px-4 text-light-300 font-medium text-sm">折扣</th>
+						<th class="text-right py-3 px-4 text-light-300 font-medium text-sm">退货率</th>
+					</tr>
+				</thead>
+				<tbody id="stores-table">
+					<!-- 表格内容将通过JavaScript动态填充 -->
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+
+<footer class="mt-10 py-4 border-t border-primary/10 bg-dark-100/30">
+	<div class="container mx-auto px-4 text-center text-light-300 text-sm">
+		<p>© 2025 鸿星尔克电商数据平台 | 数据更新时间: 每小时自动同步</p>
+	</div>
+</footer>
+
+<script>
+	// 部门店铺数据
+	const departmentStoresData = {
+		"旗舰店运营部": {
+			daily: [
+				{ name: "天猫官旗-HR01", sales: 185.6, lastYear: 91.2, rate: 103, discount: 0.36, returnRate: 5.8 }
+			],
+			monthly: [
+				{ name: "天猫官旗-HR01", sales: 1350.2, lastYear: 1100.5, rate: 23, discount: 0.39, returnRate: 17.5,
+				  monthTarget: 1500, monthAchievement: 90.0 }
+			],
+			yearly: [
+				{ name: "天猫官旗-HR01", sales: 1.7, lastYear: 1.6, rate: 6, discount: 0.41, returnRate: 18.2,
+				  yearTarget: 3.5, yearAchievement: 48.6, accumTarget: 1.9, accumAchievement: 89.5 }
+			]
+		},
+		"渠道运营部": {
+			daily: [
+				{ name: "唯品成人-40057", sales: 85.2, lastYear: 41.6, rate: 105, discount: 0.47, returnRate: 7.5 },
+				{ name: "拼多多合计", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "多多官旗-QZ59", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "多多奥莱-QZ58", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "多多鸿荣-40252", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "多多男鞋-40271", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "多多女鞋-40272", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "多多其他", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "微盟-40201", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "云集-QZ85", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "蘑菇街-40205", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "爱库存-40206", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "云货优选-40203", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "好衣库-40202", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "小红书-40211", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "其他小渠道", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "小渠道总计", sales: 41.5, lastYear: 20.2, rate: 106, discount: 0.46, returnRate: 8.6 }
+			],
+			monthly: [
+				{ name: "唯品成人-40057", sales: 85.2, lastYear: 41.6, rate: 105, discount: 0.47, returnRate: 7.5 },
+				{ name: "拼多多合计", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "多多官旗-QZ59", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "多多奥莱-QZ58", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "多多鸿荣-40252", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "多多男鞋-40271", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "多多女鞋-40272", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "多多其他", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "微盟-40201", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "云集-QZ85", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "蘑菇街-40205", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "爱库存-40206", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "云货优选-40203", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "好衣库-40202", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "小红书-40211", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "其他小渠道", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "小渠道总计", sales: 41.5, lastYear: 20.2, rate: 106, discount: 0.46, returnRate: 8.6 }
+			],
+			yearly:[
+				{ name: "唯品成人-40057", sales: 85.2, lastYear: 41.6, rate: 105, discount: 0.47, returnRate: 7.5 },
+				{ name: "拼多多合计", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "多多官旗-QZ59", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "多多奥莱-QZ58", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "多多鸿荣-40252", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "多多男鞋-40271", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "多多女鞋-40272", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "多多其他", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "微盟-40201", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "云集-QZ85", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "蘑菇街-40205", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "爱库存-40206", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "云货优选-40203", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "好衣库-40202", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "小红书-40211", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "其他小渠道", sales: 62.5, lastYear: 30.8, rate: 103, discount: 0.44, returnRate: 8.2 },
+				{ name: "小渠道总计", sales: 41.5, lastYear: 20.2, rate: 106, discount: 0.46, returnRate: 8.6 }
+			]
+		},
+		"淘系运营部": {
+			daily: [
+				{ name: "思明专卖店-HR02", sales: 156.3, lastYear: 76.8, rate: 103, discount: 0.41, returnRate: 7.2 },
+				{ name: "outlets店-HR12", sales: 133.2, lastYear: 65.3, rate: 104, discount: 0.43, returnRate: 7.8 },
+				{ name: "宝威裕达专卖店-HR08", sales: 156.3, lastYear: 76.8, rate: 103, discount: 0.41, returnRate: 7.2 },
+				{ name: "荣威专卖店-HR07", sales: 156.3, lastYear: 76.8, rate: 103, discount: 0.41, returnRate: 7.2 },
+				{ name: "淘宝其他", sales: 156.3, lastYear: 76.8, rate: 103, discount: 0.41, returnRate: 7.2 }
+			],
+			monthly: [
+				{ name: "思明专卖店-HR02", sales: 1137.6, lastYear: 928.5, rate: 23, discount: 0.42, returnRate: 19.2,
+				  monthTarget: 1200, monthAchievement: 94.8 },
+				{ name: "outlets店-HR12", sales: 968.1, lastYear: 805.7, rate: 20, discount: 0.44, returnRate: 19.8,
+				  monthTarget: 1100, monthAchievement: 88.0 },
+				{ name: "宝威裕达专卖店-HR08", sales: 1137.6, lastYear: 928.5, rate: 23, discount: 0.42, returnRate: 19.2,
+				    monthTarget: 1200, monthAchievement: 94.8 },
+				{ name: "荣威专卖店-HR07", sales: 1137.6, lastYear: 928.5, rate: 23, discount: 0.42, returnRate: 19.2,
+					  monthTarget: 1200, monthAchievement: 94.8 },
+				{ name: "淘宝其他", sales: 1137.6, lastYear: 928.5, rate: 23, discount: 0.42, returnRate: 19.2,
+					    monthTarget: 1200, monthAchievement: 94.8 },
+			],
+			yearly: [
+				{ name: "思明专卖店-HR02", sales: 1.4, lastYear: 1.3, rate: 8, discount: 0.43, returnRate: 19.5,
+				  yearTarget: 2.8, yearAchievement: 50.0, accumTarget: 1.5, accumAchievement: 93.3 },
+				{ name: "outlets店-HR12", sales: 1.2, lastYear: 1.2, rate: 0, discount: 0.45, returnRate: 20.1,
+				  yearTarget: 2.5, yearAchievement: 48.0, accumTarget: 1.4, accumAchievement: 85.7 },
+				{ name: "宝威裕达专卖店-HR08", sales: 1.4, lastYear: 1.3, rate: 8, discount: 0.43, returnRate: 19.5,
+				  yearTarget: 2.8, yearAchievement: 50.0, accumTarget: 1.5, accumAchievement: 93.3 },
+				{ name: "荣威专卖店-HR07", sales: 1.4, lastYear: 1.3, rate: 8, discount: 0.43, returnRate: 19.5,
+				  yearTarget: 2.8, yearAchievement: 50.0, accumTarget: 1.5, accumAchievement: 93.3 },
+				{ name: "淘宝其他", sales: 1.4, lastYear: 1.3, rate: 8, discount: 0.43, returnRate: 19.5,
+				  yearTarget: 2.8, yearAchievement: 50.0, accumTarget: 1.5, accumAchievement: 93.3 },													  
+			]
+		},
+		"京东运营部": {
+			daily: [
+				{ name: "京东官旗-QZ07", sales: 129.2, lastYear: 63.4, rate: 104, discount: 0.39, returnRate: 6.5 },
+				{ name: "京东自营-QZ32", sales: 86.1, lastYear: 42.3, rate: 104, discount: 0.41, returnRate: 7.1 },
+				{ name: "跑鞋旗舰店-QZ52", sales: 129.2, lastYear: 63.4, rate: 104, discount: 0.39, returnRate: 6.5 },
+				{ name: "运动旗舰店-QZ17", sales: 129.2, lastYear: 63.4, rate: 104, discount: 0.39, returnRate: 6.5 },
+				{ name: "户外官方旗舰店-QZ16", sales: 129.2, lastYear: 63.4, rate: 104, discount: 0.39, returnRate: 6.5 },
+				{ name: "运动生活旗舰店-QZ24", sales: 129.2, lastYear: 63.4, rate: 104, discount: 0.39, returnRate: 6.5 },
+				{ name: "outlets旗舰店-QZ90", sales: 129.2, lastYear: 63.4, rate: 104, discount: 0.39, returnRate: 6.5 },
+				{ name: "京东其他", sales: 129.2, lastYear: 63.4, rate: 104, discount: 0.39, returnRate: 6.5 }
+			],
+			monthly: [
+				{ name: "京东官旗-QZ07", sales: 990.1, lastYear: 814.7, rate: 21, discount: 0.41, returnRate: 17.5,
+				  monthTarget: 1100, monthAchievement: 90.0 },
+				{ name: "京东自营-QZ32", sales: 660.1, lastYear: 543.1, rate: 21, discount: 0.43, returnRate: 18.1,
+				  monthTarget: 700, monthAchievement: 94.3 },
+				{ name: "跑鞋旗舰店-QZ52", sales: 990.1, lastYear: 814.7, rate: 21, discount: 0.41, returnRate: 17.5,
+				  monthTarget: 1100, monthAchievement: 90.0 },
+				{ name: "运动旗舰店-QZ17", sales: 990.1, lastYear: 814.7, rate: 21, discount: 0.41, returnRate: 17.5,
+				  monthTarget: 1100, monthAchievement: 90.0 },
+				{ name: "户外官方旗舰店-QZ16", sales: 990.1, lastYear: 814.7, rate: 21, discount: 0.41, returnRate: 17.5,
+				  monthTarget: 1100, monthAchievement: 90.0 },
+				{ name: "运动生活旗舰店-QZ24", sales: 990.1, lastYear: 814.7, rate: 21, discount: 0.41, returnRate: 17.5,
+				  monthTarget: 1100, monthAchievement: 90.0 },
+				{ name: "outlets旗舰店-QZ90", sales: 990.1, lastYear: 814.7, rate: 21, discount: 0.41, returnRate: 17.5,
+				  monthTarget: 1100, monthAchievement: 90.0 },
+				{ name: "京东其他", sales: 990.1, lastYear: 814.7, rate: 21, discount: 0.41, returnRate: 17.5,
+				  monthTarget: 1100, monthAchievement: 90.0 }	  
+			],
+			yearly: [
+				{ name: "京东官旗-QZ07", sales: 1.3, lastYear: 1.2, rate: 8, discount: 0.42, returnRate: 18.0,
+				  yearTarget: 2.5, yearAchievement: 52.0, accumTarget: 1.4, accumAchievement: 92.9 },
+				{ name: "京东自营-QZ32", sales: 0.8, lastYear: 0.8, rate: 0, discount: 0.44, returnRate: 18.4,
+				  yearTarget: 1.7, yearAchievement: 47.1, accumTarget: 0.9, accumAchievement: 88.9 },
+				{ name: "跑鞋旗舰店-QZ52", sales: 1.3, lastYear: 1.2, rate: 8, discount: 0.42, returnRate: 18.0,
+				  yearTarget: 2.5, yearAchievement: 52.0, accumTarget: 1.4, accumAchievement: 92.9 },
+				{ name: "运动旗舰店-QZ17", sales: 1.3, lastYear: 1.2, rate: 8, discount: 0.42, returnRate: 18.0,
+				  yearTarget: 2.5, yearAchievement: 52.0, accumTarget: 1.4, accumAchievement: 92.9 },
+				{ name: "户外官方旗舰店-QZ16", sales: 1.3, lastYear: 1.2, rate: 8, discount: 0.42, returnRate: 18.0,
+				  yearTarget: 2.5, yearAchievement: 52.0, accumTarget: 1.4, accumAchievement: 92.9 },
+				{ name: "运动生活旗舰店-QZ24", sales: 1.3, lastYear: 1.2, rate: 8, discount: 0.42, returnRate: 18.0,
+				  yearTarget: 2.5, yearAchievement: 52.0, accumTarget: 1.4, accumAchievement: 92.9 },
+				{ name: "outlets旗舰店-QZ90", sales: 1.3, lastYear: 1.2, rate: 8, discount: 0.42, returnRate: 18.0,
+				  yearTarget: 2.5, yearAchievement: 52.0, accumTarget: 1.4, accumAchievement: 92.9 },
+				{ name: "京东其他", sales: 1.3, lastYear: 1.2, rate: 8, discount: 0.42, returnRate: 18.0,
+				  yearTarget: 2.5, yearAchievement: 52.0, accumTarget: 1.4, accumAchievement: 92.9 }			
+			]
+		},
+		"得物运营部": {
+			daily: [
+				{ name: "得物官方店", sales: 156.7, lastYear: 76.3, rate: 105, discount: 0.35, returnRate: 5.3 },
+			],
+			monthly: [
+				{ name: "得物官方店", sales: 1180.4, lastYear: 968.5, rate: 22, discount: 0.37, returnRate: 16.3,
+				  monthTarget: 1300, monthAchievement: 90.8 }
+			],
+			yearly: [
+				{ name: "得物官方店", sales: 1.5, lastYear: 1.4, rate: 7, discount: 0.38, returnRate: 16.7,
+				  yearTarget: 3.0, yearAchievement: 50.0, accumTarget: 1.6, accumAchievement: 93.8 }
+			]
+		},
+		"儿童天猫运营部": {
+			daily: [
+				{ name: "鸿星尔克儿童天猫旗舰店", sales: 145.2, lastYear: 71.3, rate: 104, discount: 0.43, returnRate: 6.7 },
+				{ name: "其他", sales: 145.2, lastYear: 71.3, rate: 104, discount: 0.43, returnRate: 6.7 }
+			],
+			monthly: [
+				{ name: "鸿星尔克儿童天猫旗舰店", sales: 1090.6, lastYear: 896.3, rate: 22, discount: 0.44, returnRate: 18.7,
+				  monthTarget: 1200, monthAchievement: 90.9 },
+				{ name: "其他", sales: 1090.6, lastYear: 896.3, rate: 22, discount: 0.44, returnRate: 18.7,
+				  monthTarget: 1200, monthAchievement: 90.9 }
+			],
+			yearly: [
+				{ name: "鸿星尔克儿童天猫旗舰店", sales: 1.4, lastYear: 1.3, rate: 8, discount: 0.45, returnRate: 19.1,
+				  yearTarget: 2.8, yearAchievement: 50.0, accumTarget: 1.5, accumAchievement: 93.3 },
+			    { name: "其他", sales: 1.4, lastYear: 1.3, rate: 8, discount: 0.45, returnRate: 19.1,
+				  yearTarget: 2.8, yearAchievement: 50.0, accumTarget: 1.5, accumAchievement: 93.3 }
+			]
+		},
+		"儿童渠道运营部": {
+			daily: [
+				{ name: "唯品儿童-40057", sales: 77.2, lastYear: 37.7, rate: 105, discount: 0.45, returnRate: 7.0 },
+				{ name: "拼多多儿童-XX26", sales: 51.4, lastYear: 25.2, rate: 104, discount: 0.47, returnRate: 7.4 },
+				{ name: "得物儿童-XX53", sales: 77.2, lastYear: 37.7, rate: 105, discount: 0.45, returnRate: 7.0 },
+				{ name: "京东儿童官旗-XX02", sales: 77.2, lastYear: 37.7, rate: 105, discount: 0.45, returnRate: 7.0 },
+				{ name: "京东儿童自营-XX08", sales: 77.2, lastYear: 37.7, rate: 105, discount: 0.45, returnRate: 7.0 },
+				{ name: "京东儿童专卖店-XX03", sales: 77.2, lastYear: 37.7, rate: 105, discount: 0.45, returnRate: 7.0 }
+			],
+			monthly:[
+				{ name: "唯品儿童-40057", sales: 77.2, lastYear: 37.7, rate: 105, discount: 0.45, returnRate: 7.0 },
+				{ name: "拼多多儿童-XX26", sales: 51.4, lastYear: 25.2, rate: 104, discount: 0.47, returnRate: 7.4 },
+				{ name: "得物儿童-XX53", sales: 77.2, lastYear: 37.7, rate: 105, discount: 0.45, returnRate: 7.0 },
+				{ name: "京东儿童官旗-XX02", sales: 77.2, lastYear: 37.7, rate: 105, discount: 0.45, returnRate: 7.0 },
+				{ name: "京东儿童自营-XX08", sales: 77.2, lastYear: 37.7, rate: 105, discount: 0.45, returnRate: 7.0 },
+				{ name: "京东儿童专卖店-XX03", sales: 77.2, lastYear: 37.7, rate: 105, discount: 0.45, returnRate: 7.0 }
+			],
+			yearly: [
+				{ name: "唯品儿童-40057", sales: 77.2, lastYear: 37.7, rate: 105, discount: 0.45, returnRate: 7.0 },
+				{ name: "拼多多儿童-XX26", sales: 51.4, lastYear: 25.2, rate: 104, discount: 0.47, returnRate: 7.4 },
+				{ name: "得物儿童-XX53", sales: 77.2, lastYear: 37.7, rate: 105, discount: 0.45, returnRate: 7.0 },
+				{ name: "京东儿童官旗-XX02", sales: 77.2, lastYear: 37.7, rate: 105, discount: 0.45, returnRate: 7.0 },
+				{ name: "京东儿童自营-XX08", sales: 77.2, lastYear: 37.7, rate: 105, discount: 0.45, returnRate: 7.0 },
+				{ name: "京东儿童专卖店-XX03", sales: 77.2, lastYear: 37.7, rate: 105, discount: 0.45, returnRate: 7.0 }
+			]
+		},
+		"儿童管理中心": {
+			daily: [
+				{ name: "儿童天猫总计", sales: 98.4, lastYear: 48.2, rate: 104, discount: 0.44, returnRate: 6.9 },
+				{ name: "儿童渠道总计", sales: 98.4, lastYear: 48.2, rate: 104, discount: 0.44, returnRate: 6.9 }
+			],
+			monthly: [
+				{ name: "儿童天猫总计", sales: 738.2, lastYear: 605.1, rate: 22, discount: 0.45, returnRate: 18.9,
+				  monthTarget: 800, monthAchievement: 92.3 },
+				{ name: "儿童渠道总计", sales: 738.2, lastYear: 605.1, rate: 22, discount: 0.45, returnRate: 18.9,
+				  monthTarget: 800, monthAchievement: 92.3 }
+			],
+			yearly: [
+				{ name: "儿童天猫总计", sales: 0.9, lastYear: 0.8, rate: 13, discount: 0.46, returnRate: 19.3,
+				  yearTarget: 1.8, yearAchievement: 50.0, accumTarget: 1.0, accumAchievement: 90.0 },
+				{ name: "儿童渠道总计", sales: 0.9, lastYear: 0.8, rate: 13, discount: 0.46, returnRate: 19.3,
+				  yearTarget: 1.8, yearAchievement: 50.0, accumTarget: 1.0, accumAchievement: 90.0 }
+			]
+		},
+		"抖音-自播": {
+			daily: [
+				{ name: "鸿星尔克抖音官方店", sales: 210.5, lastYear: 102.8, rate: 105, discount: 0.39, returnRate: 8.5 }
+			],
+			monthly: [
+				{ name: "鸿星尔克抖音官方店", sales: 1580.7, lastYear: 1295.3, rate: 22, discount: 0.40, returnRate: 20.5,
+				  monthTarget: 1700, monthAchievement: 92.9 }
+			],
+			yearly: [
+				{ name: "鸿星尔克抖音官方店", sales: 2.0, lastYear: 1.8, rate: 11, discount: 0.41, returnRate: 20.9,
+				  yearTarget: 4.0, yearAchievement: 50.0, accumTarget: 2.2, accumAchievement: 90.9 }
+			]
+		},
+		"抖音-达播": {
+			daily: [
+				{ name: "达人合作A", sales: 95.2, lastYear: 46.5, rate: 105, discount: 0.36, returnRate: 8.9 },
+				{ name: "达人合作B", sales: 83.1, lastYear: 40.4, rate: 106, discount: 0.38, returnRate: 9.5 }
+			],
+			monthly: [
+				{ name: "达人合作A", sales: 722.2, lastYear: 585.3, rate: 23, discount: 0.37, returnRate: 20.9,
+				  monthTarget: 780, monthAchievement: 92.6 },
+				{ name: "达人合作B", sales: 615.3, lastYear: 510.9, rate: 20, discount: 0.39, returnRate: 21.5,
+				  monthTarget: 670, monthAchievement: 91.8 }
+			],
+			yearly: [
+				{ name: "达人合作A", sales: 0.9, lastYear: 0.8, rate: 13, discount: 0.38, returnRate: 21.3,
+				  yearTarget: 1.8, yearAchievement: 50.0, accumTarget: 1.0, accumAchievement: 90.0 },
+				{ name: "达人合作B", sales: 0.8, lastYear: 0.7, rate: 14, discount: 0.40, returnRate: 21.9,
+				  yearTarget: 1.5, yearAchievement: 53.3, accumTarget: 0.8, accumAchievement: 100.0 }
+			]
+		},
+		"直播运营一部": {
+			daily: [
+				{ name: "直播主账号", sales: 75.4, lastYear: 36.8, rate: 105, discount: 0.35, returnRate: 8.5 },
+				{ name: "直播副账号", sales: 50.2, lastYear: 24.6, rate: 104, discount: 0.37, returnRate: 9.1 }
+			],
+			monthly: [
+				{ name: "直播主账号", sales: 565.4, lastYear: 463.9, rate: 22, discount: 0.36, returnRate: 20.5,
+				  monthTarget: 600, monthAchievement: 94.2 },
+				{ name: "直播副账号", sales: 377.0, lastYear: 309.2, rate: 22, discount: 0.38, returnRate: 21.1,
+				  monthTarget: 400, monthAchievement: 94.2 }
+			],
+			yearly: [
+				{ name: "直播主账号", sales: 0.7, lastYear: 0.6, rate: 17, discount: 0.37, returnRate: 20.9,
+				  yearTarget: 1.3, yearAchievement: 53.8, accumTarget: 0.8, accumAchievement: 87.5 },
+				{ name: "直播副账号", sales: 0.5, lastYear: 0.4, rate: 25, discount: 0.39, returnRate: 21.5,
+				  yearTarget: 1.0, yearAchievement: 50.0, accumTarget: 0.5, accumAchievement: 100.0 }
+			]
+		},
+		"分销部": {
+			daily: [
+				{ name: "分销渠道A", sales: 51.0, lastYear: 24.9, rate: 105, discount: 0.46, returnRate: 5.6 },
+				{ name: "分销渠道B", sales: 47.7, lastYear: 23.3, rate: 105, discount: 0.48, returnRate: 6.1 },
+				{ name: "分销渠道C", sales: 28.5, lastYear: 13.9, rate: 104, discount: 0.47, returnRate: 5.9 }
+			],
+			monthly: [
+				{ name: "分销渠道A", sales: 382.4, lastYear: 313.4, rate: 22, discount: 0.47, returnRate: 17.6,
+				  monthTarget: 420, monthAchievement: 91.0 },
+				{ name: "分销渠道B", sales: 358.5, lastYear: 292.1, rate: 23, discount: 0.49, returnRate: 18.1,
+				  monthTarget: 390, monthAchievement: 91.9 },
+				{ name: "分销渠道C", sales: 215.0, lastYear: 178.1, rate: 21, discount: 0.48, returnRate: 18.0,
+				  monthTarget: 240, monthAchievement: 89.6 }
+			],
+			yearly: [
+				{ name: "分销渠道A", sales: 0.5, lastYear: 0.4, rate: 25, discount: 0.48, returnRate: 18.0,
+				  yearTarget: 0.9, yearAchievement: 55.6, accumTarget: 0.5, accumAchievement: 100.0 },
+				{ name: "分销渠道B", sales: 0.4, lastYear: 0.4, rate: 0, discount: 0.50, returnRate: 18.5,
+				  yearTarget: 0.8, yearAchievement: 50.0, accumTarget: 0.4, accumAchievement: 100.0 },
+				{ name: "分销渠道C", sales: 0.3, lastYear: 0.3, rate: 0, discount: 0.49, returnRate: 18.4,
+				  yearTarget: 0.7, yearAchievement: 42.9, accumTarget: 0.4, accumAchievement: 75.0 }
+			]
+		}
+	};
+
+	// 设置当前日期
+	const setCurrentDate = () => {
+		const now = new Date();
+		const year = now.getFullYear();
+		const month = now.getMonth() + 1;
+		const day = now.getDate();
+		const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+		const weekday = weekdays[now.getDay()];
+		
+		document.getElementById('current-date').textContent = 
+			`${year}年${month}月${day}日 星期${weekday}`;
+	};
+	
+	// 标签切换功能
+	const setupTabs = (containerId, indicatorSelector, callback) => {
+		const tabsContainer = document.getElementById(containerId);
+		const tabBtns = tabsContainer.querySelectorAll('.tab-btn');
+		const tabIndicator = document.querySelector(indicatorSelector);
+		
+		tabBtns.forEach((btn, index) => {
+			btn.addEventListener('click', () => {
+				// 移除所有激活状态
+				tabBtns.forEach(b => b.classList.remove('active', 'text-white'));
+				tabBtns.forEach(b => b.classList.add('text-light-300'));
+				
+				// 设置当前激活状态
+				btn.classList.add('active', 'text-white');
+				btn.classList.remove('text-light-300');
+				
+				// 移动指示器
+				const tabWidth = 100 / tabBtns.length;
+				tabIndicator.style.width = `calc(${tabWidth}% - 8px)`;
+				tabIndicator.style.transform = `translateX(${index * 100}%)`;
+				
+				// 执行回调函数
+				if (callback) {
+					callback(btn.dataset.tab);
+				}
+			});
+		});
+		
+		// 初始化第一个标签
+		tabBtns[0].classList.add('text-white');
+		tabBtns[0].classList.remove('text-light-300');
+	};
+	
+	// 部门销售数据
+	const departmentData = {
+		daily: [
+			{ name: '旗舰店运营部', sales: 356.8, lastYear: 175.2, rate: 103, discount: 0.38, returnRate: 6.2 },
+			{ name: '淘系运营部', sales: 289.5, lastYear: 142.1, rate: 104, discount: 0.42, returnRate: 7.5 },
+			{ name: '京东运营部', sales: 215.3, lastYear: 105.7, rate: 104, discount: 0.40, returnRate: 6.8 },
+			{ name: '渠道运营部', sales: 189.2, lastYear: 92.6, rate: 104, discount: 0.45, returnRate: 8.1 },
+			{ name: '得物运营部', sales: 156.7, lastYear: 76.3, rate: 105, discount: 0.35, returnRate: 5.3 },
+			{ name: '儿童天猫运营部', sales: 145.2, lastYear: 71.3, rate: 104, discount: 0.43, returnRate: 6.7 },
+			{ name: '儿童渠道运营部', sales: 128.6, lastYear: 62.9, rate: 104, discount: 0.46, returnRate: 7.2 },
+			{ name: '儿童管理中心', sales: 98.4, lastYear: 48.2, rate: 104, discount: 0.44, returnRate: 6.9 },
+			{ name: '抖音-自播', sales: 210.5, lastYear: 102.8, rate: 105, discount: 0.39, returnRate: 8.5 },
+			{ name: '抖音-达播', sales: 178.3, lastYear: 86.9, rate: 103, discount: 0.37, returnRate: 9.2 },
+			{ name: '直播运营一部', sales: 125.6, lastYear: 61.4, rate: 104, discount: 0.36, returnRate: 8.8 },
+			{ name: '分销部', sales: 127.2, lastYear: 62.1, rate: 105, discount: 0.47, returnRate: 5.9 }
+		],
+		monthly: [
+			{ name: '旗舰店运营部', sales: 2560.3, lastYear: 2108.5, rate: 21, discount: 0.41, returnRate: 18.2, 
+			  monthTarget: 2800, monthAchievement: 91.4 },
+			{ name: '淘系运营部', sales: 2105.7, lastYear: 1734.2, rate: 21, discount: 0.43, returnRate: 19.5,
+			  monthTarget: 2300, monthAchievement: 91.6 },
+			{ name: '京东运营部', sales: 1650.2, lastYear: 1357.8, rate: 21, discount: 0.42, returnRate: 17.8,
+			  monthTarget: 1800, monthAchievement: 91.7 },
+			{ name: '渠道运营部', sales: 1420.5, lastYear: 1168.3, rate: 22, discount: 0.46, returnRate: 20.1,
+			  monthTarget: 1500, monthAchievement: 94.7 },
+			{ name: '得物运营部', sales: 1180.4, lastYear: 968.5, rate: 22, discount: 0.37, returnRate: 16.3,
+			  monthTarget: 1300, monthAchievement: 90.8 },
+			{ name: '儿童天猫运营部', sales: 1090.6, lastYear: 896.3, rate: 22, discount: 0.44, returnRate: 18.7,
+			  monthTarget: 1200, monthAchievement: 90.9 },
+			{ name: '儿童渠道运营部', sales: 965.3, lastYear: 793.2, rate: 22, discount: 0.47, returnRate: 19.2,
+			  monthTarget: 1050, monthAchievement: 91.9 },
+			{ name: '儿童管理中心', sales: 738.2, lastYear: 605.1, rate: 22, discount: 0.45, returnRate: 18.9,
+			  monthTarget: 800, monthAchievement: 92.3 },
+			{ name: '抖音-自播', sales: 1580.7, lastYear: 1295.3, rate: 22, discount: 0.40, returnRate: 20.5,
+			  monthTarget: 1700, monthAchievement: 92.9 },
+			{ name: '抖音-达播', sales: 1337.5, lastYear: 1096.2, rate: 22, discount: 0.38, returnRate: 21.2,
+			  monthTarget: 1450, monthAchievement: 92.2 },
+			{ name: '直播运营一部', sales: 942.4, lastYear: 773.1, rate: 22, discount: 0.37, returnRate: 20.8,
+			  monthTarget: 1000, monthAchievement: 94.2 },
+			{ name: '分销部', sales: 955.9, lastYear: 783.6, rate: 22, discount: 0.48, returnRate: 17.9,
+			  monthTarget: 1050, monthAchievement: 91.0 }
+		],
+		yearly: [
+			{ name: '旗舰店运营部', sales: 3.2, lastYear: 3.1, rate: 3, discount: 0.42, returnRate: 18.5,
+			  yearTarget: 6.5, yearAchievement: 49.2, accumTarget: 3.6, accumAchievement: 88.9 },
+			{ name: '淘系运营部', sales: 2.6, lastYear: 2.5, rate: 4, discount: 0.44, returnRate: 19.8,
+			  yearTarget: 5.3, yearAchievement: 49.1, accumTarget: 2.9, accumAchievement: 89.7 },
+			{ name: '京东运营部', sales: 2.1, lastYear: 2.0, rate: 5, discount: 0.43, returnRate: 18.2,
+			  yearTarget: 4.2, yearAchievement: 50.0, accumTarget: 2.3, accumAchievement: 91.3 },
+			{ name: '渠道运营部', sales: 1.8, lastYear: 1.7, rate: 6, discount: 0.47, returnRate: 20.5,
+			  yearTarget: 3.5, yearAchievement: 51.4, accumTarget: 1.9, accumAchievement: 94.7 },
+			{ name: '得物运营部', sales: 1.5, lastYear: 1.4, rate: 7, discount: 0.38, returnRate: 16.7,
+			  yearTarget: 3.0, yearAchievement: 50.0, accumTarget: 1.6, accumAchievement: 93.8 },
+			{ name: '儿童天猫运营部', sales: 1.4, lastYear: 1.3, rate: 8, discount: 0.45, returnRate: 19.1,
+			  yearTarget: 2.8, yearAchievement: 50.0, accumTarget: 1.5, accumAchievement: 93.3 },
+			{ name: '儿童渠道运营部', sales: 1.2, lastYear: 1.1, rate: 9, discount: 0.48, returnRate: 19.6,
+			  yearTarget: 2.4, yearAchievement: 50.0, accumTarget: 1.3, accumAchievement: 92.3 },
+			{ name: '儿童管理中心', sales: 0.9, lastYear: 0.8, rate: 13, discount: 0.46, returnRate: 19.3,
+			  yearTarget: 1.8, yearAchievement: 50.0, accumTarget: 1.0, accumAchievement: 90.0 },
+			{ name: '抖音-自播', sales: 2.0, lastYear: 1.8, rate: 11, discount: 0.41, returnRate: 20.9,
+			  yearTarget: 4.0, yearAchievement: 50.0, accumTarget: 2.2, accumAchievement: 90.9 },
+			{ name: '抖音-达播', sales: 1.7, lastYear: 1.5, rate: 13, discount: 0.39, returnRate: 21.6,
+			  yearTarget: 3.3, yearAchievement: 51.5, accumTarget: 1.8, accumAchievement: 94.4 },
+			{ name: '直播运营一部', sales: 1.2, lastYear: 1.0, rate: 20, discount: 0.38, returnRate: 21.2,
+			  yearTarget: 2.3, yearAchievement: 52.2, accumTarget: 1.3, accumAchievement: 92.3 },
+			{ name: '分销部', sales: 1.2, lastYear: 1.1, rate: 9, discount: 0.49, returnRate: 18.3,
+			  yearTarget: 2.4, yearAchievement: 50.0, accumTarget: 1.3, accumAchievement: 92.3 }
+		]
+	};
+	
+	// 更新表格头部
+	const updateTableHeader = (period, headerId) => {
+		const header = document.getElementById(headerId);
+		header.innerHTML = `
+			<th class="text-left py-3 px-4 text-light-300 font-medium text-sm">${headerId === 'table-header' ? '部门' : '店铺名称'}</th>
+			<th class="text-right py-3 px-4 text-light-300 font-medium text-sm">销售额</th>
+			<th class="text-right py-3 px-4 text-light-300 font-medium text-sm">去年同期</th>
+			<th class="text-right py-3 px-4 text-light-300 font-medium text-sm">同比</th>
+			<th class="text-right py-3 px-4 text-light-300 font-medium text-sm">折扣</th>
+			<th class="text-right py-3 px-4 text-light-300 font-medium text-sm">退货率</th>
+		`;
+		
+		// 月数据添加月目标和月销售达成列
+		if (period === 'monthly') {
+			header.innerHTML += `
+				<th class="text-right py-3 px-4 text-light-300 font-medium text-sm">月目标${headerId === 'table-header' ? '(万)' : '(万)'}</th>
+				<th class="text-right py-3 px-4 text-light-300 font-medium text-sm">月销售达成</th>
+			`;
+		}
+		// 年数据添加年目标、年销售达成、累计目标、累计销售达成列
+		else if (period === 'yearly') {
+			header.innerHTML += `
+				<th class="text-right py-3 px-4 text-light-300 font-medium text-sm">年目标${headerId === 'table-header' ? '(亿)' : '(亿)'}</th>
+				<th class="text-right py-3 px-4 text-light-300 font-medium text-sm">年销售达成</th>
+				<th class="text-right py-3 px-4 text-light-300 font-medium text-sm">累计目标${headerId === 'table-header' ? '(亿)' : '(亿)'}</th>
+				<th class="text-right py-3 px-4 text-light-300 font-medium text-sm">累计销售达成</th>
+			`;
+		}
+	};
+	
+	// 填充部门表格数据
+	const populateDepartmentTable = (period) => {
+		// 先更新表头
+		updateTableHeader(period, 'table-header');
+		
+		const tableBody = document.getElementById('departments-table');
+		tableBody.innerHTML = '';
+		
+		const data = departmentData[period];
+		
+		data.forEach(dept => {
+			const row = document.createElement('tr');
+			row.className = 'border-b border-primary/5 table-row-hover';
+			
+			// 格式化同比增长率样式
+			const rateClass = dept.rate >= 0 ? 'text-success' : 'text-danger';
+			const rateSymbol = dept.rate >= 0 ? '+' : '';
+			
+			// 格式化销售额单位
+			let salesText, lastYearText;
+			if (period === 'yearly') {
+				salesText = `${dept.sales}亿`;
+				lastYearText = `${dept.lastYear}亿`;
+			} else {
+				salesText = `${dept.sales}万`;
+				lastYearText = `${dept.lastYear}万`;
+			}
+			
+			// 基础单元格内容，部门名称添加点击事件
+			let cells = `
+				<td class="py-3 px-4">
+					<span class="dept-link" data-dept="${dept.name}">${dept.name}</span>
+				</td>
+				<td class="py-3 px-4 text-right font-medium">${salesText}</td>
+				<td class="py-3 px-4 text-right text-light-300">${lastYearText}</td>
+				<td class="py-3 px-4 text-right ${rateClass}">${rateSymbol}${dept.rate}%</td>
+				<td class="py-3 px-4 text-right">${dept.discount}</td>
+				<td class="py-3 px-4 text-right">${dept.returnRate}%</td>
+			`;
+			
+			// 月数据添加月目标和达成列
+			if (period === 'monthly') {
+				// 达成率样式
+				const achievementClass = dept.monthAchievement >= 90 ? 'text-success' : 
+									   (dept.monthAchievement >= 80 ? 'text-warning' : 'text-danger');
+				
+				cells += `
+					<td class="py-3 px-4 text-right">${dept.monthTarget}万</td>
+					<td class="py-3 px-4 text-right">
+						<div class="flex items-center justify-end">
+							<span class="${achievementClass} mr-2">${dept.monthAchievement}%</span>
+							<div class="progress-bar w-24 bg-dark-300/50">
+								<div class="progress-value ${achievementClass === 'text-success' ? 'bg-success' : 
+														   achievementClass === 'text-warning' ? 'bg-warning' : 'bg-danger'}" 
+									 style="width: ${dept.monthAchievement}%"></div>
+							</div>
+						</div>
+					</td>
+				`;
+			}
+			// 年数据添加年目标、年达成、累计目标、累计达成列
+			else if (period === 'yearly') {
+				// 年达成率样式
+				const yearAchievementClass = dept.yearAchievement >= 50 ? 'text-success' : 
+										  (dept.yearAchievement >= 40 ? 'text-warning' : 'text-danger');
+				
+				// 累计达成率样式
+				const accumAchievementClass = dept.accumAchievement >= 90 ? 'text-success' : 
+										   (dept.accumAchievement >= 80 ? 'text-warning' : 'text-danger');
+				
+				cells += `
+					<td class="py-3 px-4 text-right">${dept.yearTarget}亿</td>
+					<td class="py-3 px-4 text-right">
+						<div class="flex items-center justify-end">
+							<span class="${yearAchievementClass} mr-2">${dept.yearAchievement}%</span>
+							<div class="progress-bar w-24 bg-dark-300/50">
+								<div class="progress-value ${yearAchievementClass === 'text-success' ? 'bg-success' : 
+														   yearAchievementClass === 'text-warning' ? 'bg-warning' : 'bg-danger'}" 
+									 style="width: ${dept.yearAchievement}%"></div>
+							</div>
+						</div>
+					</td>
+					<td class="py-3 px-4 text-right">${dept.accumTarget}亿</td>
+					<td class="py-3 px-4 text-right">
+						<div class="flex items-center justify-end">
+							<span class="${accumAchievementClass} mr-2">${dept.accumAchievement}%</span>
+							<div class="progress-bar w-24 bg-dark-300/50">
+								<div class="progress-value ${accumAchievementClass === 'text-success' ? 'bg-success' : 
+														   accumAchievementClass === 'text-warning' ? 'bg-warning' : 'bg-danger'}" 
+									 style="width: ${dept.accumAchievement}%"></div>
+							</div>
+						</div>
+					</td>
+				`;
+			}
+			
+			row.innerHTML = cells;
+			tableBody.appendChild(row);
+		});
+		
+		// 为部门名称添加点击事件
+		document.querySelectorAll('.dept-link').forEach(link => {
+			link.addEventListener('click', () => {
+				const deptName = link.dataset.dept;
+				showDepartmentDetail(deptName);
+			});
+		});
+	};
+	
+	// 填充店铺表格数据
+	const populateStoresTable = (deptName, period) => {
+		// 先更新表头
+		updateTableHeader(period, 'store-table-header');
+		
+		// 更新表格标题
+		document.getElementById('store-table-title').textContent = 
+			`店铺销售表现（${period === 'daily' ? '日' : period === 'monthly' ? '月' : '年'}数据）`;
+		
+		const tableBody = document.getElementById('stores-table');
+		tableBody.innerHTML = '';
+		
+		// 获取该部门的店铺数据
+		const deptStores = departmentStoresData[deptName];
+		if (!deptStores) {
+			tableBody.innerHTML = `
+				<tr>
+					<td colspan="${period === 'daily' ? '6' : period === 'monthly' ? '8' : '10'}" class="py-8 text-center text-light-300">
+						暂无该部门的店铺数据
+					</td>
+				</tr>
+			`;
+			return;
+		}
+		
+		const data = deptStores[period];
+		if (!data || data.length === 0) {
+			tableBody.innerHTML = `
+				<tr>
+					<td colspan="${period === 'daily' ? '6' : period === 'monthly' ? '8' : '10'}" class="py-8 text-center text-light-300">
+						暂无该部门${period === 'daily' ? '日' : period === 'monthly' ? '月' : '年'}的店铺数据
+					</td>
+				</tr>
+			`;
+			return;
+		}
+		
+		data.forEach(store => {
+			const row = document.createElement('tr');
+			row.className = 'border-b border-primary/5 table-row-hover';
+			
+			// 格式化同比增长率样式
+			const rateClass = store.rate >= 0 ? 'text-success' : 'text-danger';
+			const rateSymbol = store.rate >= 0 ? '+' : '';
+			
+			// 格式化销售额单位
+			let salesText, lastYearText;
+			if (period === 'yearly') {
+				salesText = `${store.sales}亿`;
+				lastYearText = `${store.lastYear}亿`;
+			} else {
+				salesText = `${store.sales}万`;
+				lastYearText = `${store.lastYear}万`;
+			}
+			
+			// 基础单元格内容
+			let cells = `
+				<td class="py-3 px-4">${store.name}</td>
+				<td class="py-3 px-4 text-right font-medium">${salesText}</td>
+				<td class="py-3 px-4 text-right text-light-300">${lastYearText}</td>
+				<td class="py-3 px-4 text-right ${rateClass}">${rateSymbol}${store.rate}%</td>
+				<td class="py-3 px-4 text-right">${store.discount}</td>
+				<td class="py-3 px-4 text-right">${store.returnRate}%</td>
+			`;
+			
+			// 月数据添加月目标和达成列
+			if (period === 'monthly') {
+				// 达成率样式
+				const achievementClass = store.monthAchievement >= 90 ? 'text-success' : 
+									   (store.monthAchievement >= 80 ? 'text-warning' : 'text-danger');
+				
+				cells += `
+					<td class="py-3 px-4 text-right">${store.monthTarget}万</td>
+					<td class="py-3 px-4 text-right">
+						<div class="flex items-center justify-end">
+							<span class="${achievementClass} mr-2">${store.monthAchievement}%</span>
+							<div class="progress-bar w-24 bg-dark-300/50">
+								<div class="progress-value ${achievementClass === 'text-success' ? 'bg-success' : 
+														   achievementClass === 'text-warning' ? 'bg-warning' : 'bg-danger'}" 
+									 style="width: ${store.monthAchievement}%"></div>
+							</div>
+						</div>
+					</td>
+				`;
+			}
+			// 年数据添加年目标、年达成、累计目标、累计达成列
+			else if (period === 'yearly') {
+				// 年达成率样式
+				const yearAchievementClass = store.yearAchievement >= 50 ? 'text-success' : 
+										  (store.yearAchievement >= 40 ? 'text-warning' : 'text-danger');
+				
+				// 累计达成率样式
+				const accumAchievementClass = store.accumAchievement >= 90 ? 'text-success' : 
+										   (store.accumAchievement >= 80 ? 'text-warning' : 'text-danger');
+				
+				cells += `
+					<td class="py-3 px-4 text-right">${store.yearTarget}亿</td>
+					<td class="py-3 px-4 text-right">
+						<div class="flex items-center justify-end">
+							<span class="${yearAchievementClass} mr-2">${store.yearAchievement}%</span>
+							<div class="progress-bar w-24 bg-dark-300/50">
+								<div class="progress-value ${yearAchievementClass === 'text-success' ? 'bg-success' : 
+														   yearAchievementClass === 'text-warning' ? 'bg-warning' : 'bg-danger'}" 
+									 style="width: ${store.yearAchievement}%"></div>
+							</div>
+						</div>
+					</td>
+					<td class="py-3 px-4 text-right">${store.accumTarget}亿</td>
+					<td class="py-3 px-4 text-right">
+						<div class="flex items-center justify-end">
+							<span class="${accumAchievementClass} mr-2">${store.accumAchievement}%</span>
+							<div class="progress-bar w-24 bg-dark-300/50">
+								<div class="progress-value ${accumAchievementClass === 'text-success' ? 'bg-success' : 
+														   accumAchievementClass === 'text-warning' ? 'bg-warning' : 'bg-danger'}" 
+									 style="width: ${store.accumAchievement}%"></div>
+							</div>
+						</div>
+					</td>
+				`;
+			}
+			
+			row.innerHTML = cells;
+			tableBody.appendChild(row);
+		});
+	};
+	
+	// 显示部门详情页
+	const showDepartmentDetail = (deptName) => {
+		// 隐藏总览页，显示详情页
+		document.getElementById('dashboard-container').classList.add('hidden');
+		document.getElementById('department-detail-container').classList.remove('hidden');
+		
+		// 更新详情页标题
+		document.getElementById('detail-department-name').textContent = 
+			`${deptName} - 店铺销售详情`;
+		
+		// 初始化详情页标签切换
+		setupTabs('detail-tabs-container', '#department-detail-container .tab-indicator', (period) => {
+			populateStoresTable(deptName, period);
+		});
+		
+		// 初始化显示日数据
+		populateStoresTable(deptName, 'daily');
+	};
+	
+	// 返回总览页
+	const backToDashboard = () => {
+		document.getElementById('department-detail-container').classList.add('hidden');
+		document.getElementById('dashboard-container').classList.remove('hidden');
+	};
+	
+	// 销售趋势图表变量
+	let salesTrendChart = null;
+	
+	// 生成8月1日-8月26日的日期标签
+	const generateAugustDailyLabels = () => {
+		const labels = [];
+		// 循环生成8月1日到8月26日的日期格式（例：8/1、8/2...8/26）
+		for (let day = 1; day <= 26; day++) {
+			labels.push(`8/${day}`);
+		}
+		return labels;
+	};
+	
+	// 生成1月-8月的月份标签
+	const generateMonthlyLabels = () => {
+		return ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月'];
+	};
+	
+	// 初始化销售趋势图
+	const initSalesTrendChart = () => {
+		const ctx = document.getElementById('sales-trend-chart').getContext('2d');
+		
+		// 销毁已存在的图表
+		if (salesTrendChart) {
+			salesTrendChart.destroy();
+		}
+
+		// 默认显示月数据的8月日趋势
+		const dailyLabels = generateAugustDailyLabels();
+		const currentYearDailyData = [
+			1520, 1680, 1590, 1720, 1650, 1810, 1920,
+			1780, 1850, 1910, 1880, 2010, 2150, 2080,
+			1950, 2030, 2120, 2210, 2180, 2090, 2250,
+			2310, 2280, 2350, 2420, 2380
+		];
+		const lastYearDailyData = [
+			750, 820, 780, 850, 810, 890, 950,
+			910, 940, 980, 960, 1020, 1080, 1050,
+			1010, 1040, 1090, 1150, 1120, 1080, 1160,
+			1200, 1180, 1230, 1280, 1250
+		];
+
+		salesTrendChart = new Chart(ctx, {
+			type: 'line',
+			data: {
+				labels: dailyLabels,
+				datasets: [
+					{
+						label: '2025年',
+						data: currentYearDailyData,
+						borderColor: '#165DFF',
+						backgroundColor: 'rgba(22, 93, 255, 0.1)',
+						tension: 0.4,
+						fill: true,
+						pointBackgroundColor: '#165DFF',
+						pointRadius: 3,
+						pointHoverRadius: 5
+					},
+					{
+						label: '2024年',
+						data: lastYearDailyData,
+						borderColor: '#86909C',
+						backgroundColor: 'transparent',
+						tension: 0.4,
+						fill: false,
+						pointBackgroundColor: '#86909C',
+						pointRadius: 2,
+						pointHoverRadius: 4
+					}
+				]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				plugins: {
+					legend: {
+						position: 'top',
+						labels: {
+							color: '#C9CDD4',
+							boxWidth: 10,
+							usePointStyle: true,
+							pointStyle: 'circle'
+						}
+					},
+					tooltip: {
+						mode: 'index',
+						intersect: false,
+						backgroundColor: 'rgba(13, 20, 38, 0.9)',
+						borderColor: 'rgba(22, 93, 255, 0.3)',
+						borderWidth: 1,
+						padding: 10,
+						bodySpacing: 5,
+						titleColor: '#fff',
+						bodyColor: '#C9CDD4',
+						displayColors: true,
+						callbacks: {
+							label: function(context) {
+								return `${context.dataset.label}: ${context.raw}万元`;
+							}
+						}
+					}
+				},
+				scales: {
+					x: {
+						grid: {
+							color: 'rgba(255, 255, 255, 0.05)'
+						},
+						ticks: {
+							color: '#86909C',
+							maxRotation: 0,
+							autoSkip: true,
+							maxTicksLimit: 6
+						}
+					},
+					y: {
+						grid: {
+							color: 'rgba(255, 255, 255, 0.05)'
+						},
+						ticks: {
+							color: '#86909C',
+							callback: function(value) {
+								return value + '万';
+							}
+						}
+					}
+				},
+				interaction: {
+					mode: 'nearest',
+					axis: 'x',
+					intersect: false
+				},
+				animations: {
+					tension: {
+						duration: 1000,
+						easing: 'linear'
+					}
+				}
+			}
+		});
+	};
+	
+	// 更新看板数据
+	const updateDashboardData = (period) => {
+		// 更新核心指标
+		const metrics = {
+			daily: {
+				totalSales: '¥2019.9万',
+				targetAchievement: '98%',
+				achievementBar: 98,
+				avgDiscount: '0.409',
+				returnRate: '7%',
+				trendPeriod: '近7天'
+			},
+			monthly: {
+				totalSales: '¥14546.8万',
+				targetAchievement: '55%',
+				achievementBar: 55,
+				avgDiscount: '0.427',
+				returnRate: '19%',
+				trendPeriod: '8月1日-8月26日'
+			},
+			yearly: {
+				totalSales: '¥20.00亿',
+				targetAchievement: '49%',
+				achievementBar: 49,
+				avgDiscount: '0.435',
+				returnRate: '18.5%',
+				trendPeriod: '1月-8月'
+			}
+		};
+		
+		// 更新指标显示
+		document.getElementById('total-sales').textContent = metrics[period].totalSales;
+		document.getElementById('target-achievement').textContent = metrics[period].targetAchievement;
+		document.getElementById('achievement-bar').style.width = `${metrics[period].achievementBar}%`;
+		document.getElementById('avg-discount').textContent = metrics[period].avgDiscount;
+		document.getElementById('return-rate').textContent = metrics[period].returnRate;
+		
+		// 更新图表周期文本
+		document.getElementById('trend-period').textContent = metrics[period].trendPeriod;
+		
+		// 更新部门表格数据
+		populateDepartmentTable(period);
+		
+		// 重新生成图表数据
+		if (salesTrendChart) {
+			let labels, data, lastYearData;
+			
+			if (period === 'daily') {
+				// 日数据：近7天
+				labels = ['8/21', '8/22', '8/23', '8/24', '8/25', '8/26', '8/27'];
+				data = [2250, 2310, 2280, 2350, 2420, 2380, 2450];
+				lastYearData = [1160, 1200, 1180, 1230, 1280, 1250, 1290];
+			} else if (period === 'monthly') {
+				// 月数据：8月1-26日的日数据
+				labels = generateAugustDailyLabels();
+				data = [
+					1520, 1680, 1590, 1720, 1650, 1810, 1920,
+					1780, 1850, 1910, 1880, 2010, 2150, 2080,
+					1950, 2030, 2120, 2210, 2180, 2090, 2250,
+					2310, 2280, 2350, 2420, 2380
+				];
+				lastYearData = [
+					750, 820, 780, 850, 810, 890, 950,
+					910, 940, 980, 960, 1020, 1080, 1050,
+					1010, 1040, 1090, 1150, 1120, 1080, 1160,
+					1200, 1180, 1230, 1280, 1250
+				];
+			} else { // yearly
+				// 年数据：1-8月的月数据（新增独立数据）
+				labels = generateMonthlyLabels(); // 1月至8月
+				data = [18500, 19200, 21000, 22500, 24800, 23200, 25600, 27200]; // 2025年各月销售额（万元）
+				lastYearData = [17200, 18000, 19500, 20800, 22300, 21000, 23100, 24500]; // 2024年同期数据（万元）
+			}
+			
+			salesTrendChart.data.labels = labels;
+			salesTrendChart.data.datasets[0].data = data;
+			salesTrendChart.data.datasets[1].data = lastYearData;
+			salesTrendChart.update();
+		}
+	};
+	
+	// 页面加载完成后初始化
+	document.addEventListener('DOMContentLoaded', () => {
+		setCurrentDate();
+		
+		// 初始化总览页标签
+		setupTabs('tabs-container', '#dashboard-container .tab-indicator', (period) => {
+			updateDashboardData(period);
+		});
+		
+		// 默认激活月数据标签
+		const tabBtns = document.querySelectorAll('#tabs-container .tab-btn');
+		tabBtns[1].click(); // 激活第二个标签（月数据）
+		
+		// 初始化部门表格
+		populateDepartmentTable('monthly');
+		
+		// 初始化销售趋势图
+		initSalesTrendChart();
+		
+		// 返回按钮事件
+		document.getElementById('back-to-dashboard').addEventListener('click', backToDashboard);
+		
+		// 添加数据刷新动画效果
+		setInterval(() => {
+			const elements = document.querySelectorAll('.animate-value');
+			elements.forEach(el => {
+				el.style.opacity = '0.6';
+				setTimeout(() => {
+					el.style.opacity = '1';
+				}, 300);
+			});
+		}, 30000); // 每30秒刷新一次数据视觉效果
+	});
+</script>
